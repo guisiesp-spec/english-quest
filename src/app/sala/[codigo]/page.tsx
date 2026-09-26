@@ -491,7 +491,7 @@ function SorteioTimes({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedo
 function ResultadoPopup({
   resultado, ehMeuTurno, cor, grupoAtual,
 }: {
-  resultado: { correto: boolean; casas_avancadas: number; resposta_correta: string | Record<string, string>; resposta_dada?: string };
+  resultado: { correto: boolean; casas_avancadas: number; resposta_correta: string | Record<string, string>; resposta_dada?: string | null };
   ehMeuTurno: boolean;
   cor?: string;
   grupoAtual?: Grupo;
