@@ -126,6 +126,25 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
         </Overlay>
       )}
 
+      {/* Dado rolando */}
+      {sala.status === 'jogando' && sala.fase === 'dado' && (
+        <Overlay>
+          <div className="flex flex-col items-center gap-5 py-4 animate-pop-in text-center">
+            {grupoAtual && (
+              <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl border-2"
+                style={{ backgroundColor: grupoAtual.cor + '22', borderColor: grupoAtual.cor }}>
+                {grupoAtual.emoji}
+              </div>
+            )}
+            <div>
+              <p className="font-black text-2xl" style={{ color: grupoAtual?.cor ?? '#fff' }}>{grupoAtual?.nome}</p>
+              <p className="text-sm mt-1 text-[#7D8590]">está rolando o dado...</p>
+            </div>
+            <span className="text-5xl inline-block animate-spin" style={{ animationDuration: '1.2s' }}>🎲</span>
+          </div>
+        </Overlay>
+      )}
+
       {/* Minigame (readonly) */}
       {sala.status === 'jogando' && sala.fase === 'minigame' && sala.pergunta_atual && (
         <Overlay>

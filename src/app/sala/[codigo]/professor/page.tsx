@@ -229,6 +229,19 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
             )}
           </div>
 
+          {/* ── DADO ROLANDO ── */}
+          {sala.status === 'jogando' && sala.fase === 'dado' && grupoAtual && (
+            <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-5 flex items-center gap-4">
+              <span className="text-3xl inline-block animate-spin" style={{ animationDuration: '1.2s' }}>🎲</span>
+              <div>
+                <p className="text-white font-bold text-sm">Rolando o dado</p>
+                <p className="text-xs mt-0.5 font-bold" style={{ color: grupoAtual.cor }}>
+                  {grupoAtual.emoji} {grupoAtual.nome}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* ── LIBERAR PRÓXIMA PERGUNTA + GABARITO PROFESSOR ── */}
           {sala.status === 'jogando' && sala.fase === 'resultado' && sala.resultado_atual && !sala.resultado_atual.correto && (
             <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-5 flex flex-col gap-4">

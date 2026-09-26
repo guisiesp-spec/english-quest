@@ -158,8 +158,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
     mostrarVezDe ||
     sala.status === 'finalizado' ||
     (sala.status === 'jogando' && (
-      (ehMeuTurno && sala.fase === 'dado' && !esperandoWild) ||
-      (ehMeuTurno && esperandoWild) ||
+      sala.fase === 'dado' ||
       sala.fase === 'minigame' ||
       sala.fase === 'resultado'
     ));
@@ -268,17 +267,35 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
         </Overlay>
       )}
 
-      {!mostrarSorteio && sala.status === 'jogando' && ehMeuTurno && esperandoWild && (
-        <Overlay><WildCard onEscolher={handleWild} /></Overlay>
-      )}
-
-      {!mostrarSorteio && sala.status === 'jogando' && ehMeuTurno && sala.fase === 'dado' && !esperandoWild && (
+      {!mostrarSorteio && sala.status === 'jogando' && sala.fase === 'dado' && (
         <Overlay>
-          <div className="flex flex-col items-center gap-4 py-2 animate-pop-in">
-            <p className="text-xl font-black text-white">🎲 Role o dado!</p>
-            <p className="text-sm" style={{ color: MUTED }}>Sorteia a categoria da pergunta</p>
-            <Dado onRolar={handleDado} />
-          </div>
+          {ehMeuTurno && esperandoWild ? (
+            <WildCard onEscolher={handleWild} />
+          ) : ehMeuTurno ? (
+            <div className="flex flex-col items-center gap-4 py-2 animate-pop-in">
+              <p className="text-xl font-black text-white">🎲 Role o dado!</p>
+              <p className="text-sm" style={{ color: MUTED }}>Sorteia a categoria da pergunta</p>
+              <Dado onRolar={handleDado} />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-5 py-4 animate-pop-in text-center">
+              {grupoAtual && (
+                <div
+                  className="w-20 h-20 rounded-full flex items-center justify-center text-4xl border-2"
+                  style={{ backgroundColor: grupoAtual.cor + '22', borderColor: grupoAtual.cor }}
+                >
+                  {grupoAtual.emoji}
+                </div>
+              )}
+              <div>
+                <p className="font-black text-2xl" style={{ color: grupoAtual?.cor ?? '#fff' }}>
+                  {grupoAtual?.nome}
+                </p>
+                <p className="text-sm mt-1" style={{ color: MUTED }}>está rolando o dado...</p>
+              </div>
+              <span className="text-5xl inline-block animate-spin" style={{ animationDuration: '1.2s' }}>🎲</span>
+            </div>
+          )}
         </Overlay>
       )}
 
