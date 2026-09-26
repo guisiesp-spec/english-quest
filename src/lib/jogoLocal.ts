@@ -34,11 +34,9 @@ export function calcularCasasAvancadas(
   doubleAtivo: boolean,
 ): number {
   if (!correto) return 0;
-  // Scale for 300-square board: nivel × 6 (6, 12, 18, 24, 30)
-  let casas = nivel * 6;
-  if (categoria === 'challenge') casas = 20;
+  let casas = nivel + 1; // nivel 1→2, 2→3, 3→4, 4→5, 5→6
   if (doubleAtivo) casas *= 2;
-  return casas;
+  return Math.min(casas, 6); // hard cap: never more than 6
 }
 
 export function novaEstrela(estrelaAtual: number, correto: boolean, categoria: CategoriasDado): number {
