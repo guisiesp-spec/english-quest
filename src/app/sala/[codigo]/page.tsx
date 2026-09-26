@@ -64,6 +64,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   const prevStatusRef = useRef<string | undefined>(undefined);
   const prevPosRef    = useRef<number>(-1);
   const prevTurnoRef  = useRef<string | null>(null);
+  const timerExpiradoRef = useRef(false);
 
   const meuGrupo   = grupos.find(g => g.id === meuGrupoId) ?? null;
   const ehMeuTurno = sala?.turno_grupo_id === meuGrupoId;
@@ -74,22 +75,32 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   useEffect(() => { avancarRef.current = jogo.avancarTurno; });
   useEffect(() => { rolarRef.current = jogo.rolarDado; });
 
-  // Dice timer — countdown; when it hits 0 a separate effect fires the auto-roll
+  // Dice timer — countdown; guards with timerExpiradoRef so auto-roll only fires
+  // when THIS turn's timer actually ran out (not from a stale 0 carried over)
   useEffect(() => {
+    timerExpiradoRef.current = false;
     if (sala?.fase !== 'dado' || !ehMeuTurno || !meuGrupoId || esperandoWild) {
       setTempoDado(TIMER_DADO);
       return;
     }
     setTempoDado(TIMER_DADO);
     const id = setInterval(() => {
-      setTempoDado(t => (t <= 1 ? 0 : t - 1));
+      setTempoDado(t => {
+        if (t <= 1) {
+          clearInterval(id);
+          timerExpiradoRef.current = true;
+          return 0;
+        }
+        return t - 1;
+      });
     }, 1000);
     return () => clearInterval(id);
   }, [sala?.fase, ehMeuTurno, meuGrupoId, esperandoWild]);
 
-  // Auto-roll when countdown reaches 0
+  // Auto-roll — only fires when the ref confirms the timer really expired this turn
   useEffect(() => {
-    if (tempoDado !== 0 || sala?.fase !== 'dado' || !ehMeuTurno || !meuGrupoId || esperandoWild) return;
+    if (!timerExpiradoRef.current || sala?.fase !== 'dado' || !ehMeuTurno || !meuGrupoId || esperandoWild) return;
+    timerExpiradoRef.current = false;
     const cats: CategoriasDado[] = ['grammar', 'vocabulary', 'time_place'];
     rolarRef.current(meuGrupoId, cats[Math.floor(Math.random() * cats.length)], []);
   }, [tempoDado, sala?.fase, ehMeuTurno, meuGrupoId, esperandoWild]);

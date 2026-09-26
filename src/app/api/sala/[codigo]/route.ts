@@ -182,6 +182,16 @@ export async function POST(
       return NextResponse.json({ sala, grupos });
     }
 
+    case 'TROCAR_COR': {
+      const grupoId  = payload.grupoId as string;
+      const slotIdx  = Number(payload.slotIdx ?? 0);
+      const slot     = GRUPOS_SLOTS[slotIdx % GRUPOS_SLOTS.length];
+      const updates  = { nome: slot.nome, cor: slot.cor, emoji: slot.emoji };
+      await storeGrupoUpdate(grupoId, updates);
+      grupos = grupos.map(g => g.id === grupoId ? { ...g, ...updates } : g);
+      return NextResponse.json({ sala, grupos });
+    }
+
     case 'REMOVER_GRUPO': {
       const grupoId = payload.grupoId as string;
       await storeGrupoRemove(grupoId);

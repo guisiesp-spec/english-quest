@@ -2,18 +2,19 @@
 import { use, useState, useEffect } from 'react';
 import { useJogo } from '@/hooks/useJogo';
 import type { Pergunta, PerguntaMultiplaEscolha, PerguntaVF, PerguntaLigar } from '@/lib/tipos';
-import { DADO_CONFIG } from '@/lib/constantes';
+import { DADO_CONFIG, GRUPOS_CONFIG } from '@/lib/constantes';
 import QRCode from '@/components/QRCode';
 import MinigameRenderer from '@/components/MinigameRenderer';
 
 export default function ProfessorPage({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
-  const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, removerGrupo, pausar, encerrarJogo } = useJogo(codigo);
+  const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, removerGrupo, trocarCor, pausar, encerrarJogo } = useJogo(codigo);
   const [showQR, setShowQR] = useState(false);
   const [salaURL, setSalaURL] = useState('');
   const [ip, setIp] = useState('');
   const [confirmEncerrar, setConfirmEncerrar] = useState(false);
   const [confirmRemover, setConfirmRemover] = useState<{ id: string; nome: string; cor: string; emoji: string } | null>(null);
+  const [colorPickerGrupoId, setColorPickerGrupoId] = useState<string | null>(null);
 
   useEffect(() => {
     const origin = window.location.origin;
@@ -78,6 +79,35 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
               >
                 Remover
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Color picker */}
+      {colorPickerGrupoId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+          <div className="bg-[#161B22] border border-[#30363D] rounded-3xl p-5 w-full max-w-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-white font-black text-base">🎨 Alterar cor</h2>
+              <button onClick={() => setColorPickerGrupoId(null)}
+                className="text-[#7D8590] hover:text-white text-xl leading-none transition-colors">✕</button>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {GRUPOS_CONFIG.map((slot, idx) => (
+                <button
+                  key={idx}
+                  onClick={async () => { await trocarCor(colorPickerGrupoId, idx); setColorPickerGrupoId(null); }}
+                  className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl border border-transparent hover:border-white/20 transition-all active:scale-95"
+                  style={{ backgroundColor: slot.cor + '22' }}
+                  title={slot.nome}
+                >
+                  <span className="text-2xl">{slot.emoji}</span>
+                  <span className="text-xs font-semibold leading-tight text-center" style={{ color: slot.cor }}>
+                    {slot.nome.replace('Grupo ', '')}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -399,11 +429,18 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
                         +
                       </button>
                       {sala.status !== 'finalizado' && (
-                        <button onClick={() => setConfirmRemover({ id: g.id, nome: g.nome, cor: g.cor, emoji: g.emoji })}
-                          className="w-7 h-7 rounded-lg font-black text-sm bg-red-500/10 hover:bg-red-500/30 text-red-400 border border-red-500/20 transition-all active:scale-95"
-                          title="Remover equipe">
-                          🗑
-                        </button>
+                        <>
+                          <button onClick={() => setColorPickerGrupoId(g.id)}
+                            className="w-7 h-7 rounded-lg font-black text-sm bg-violet-500/10 hover:bg-violet-500/30 text-violet-400 border border-violet-500/20 transition-all active:scale-95"
+                            title="Alterar cor">
+                            🎨
+                          </button>
+                          <button onClick={() => setConfirmRemover({ id: g.id, nome: g.nome, cor: g.cor, emoji: g.emoji })}
+                            className="w-7 h-7 rounded-lg font-black text-sm bg-red-500/10 hover:bg-red-500/30 text-red-400 border border-red-500/20 transition-all active:scale-95"
+                            title="Remover equipe">
+                            🗑
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
