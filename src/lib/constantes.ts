@@ -42,42 +42,42 @@ export const DADO_CONFIG: ConfigDado[] = [
   {
     categoria: 'grammar',
     emoji: '📝',
-    label: 'GRAMMAR',
+    label: 'Gramática',
     cor: '#3b82f6',
     corBg: '#eff6ff',
   },
   {
     categoria: 'vocabulary',
     emoji: '🗣️',
-    label: 'VOCABULARY',
+    label: 'Vocabulário',
     cor: '#22c55e',
     corBg: '#f0fdf4',
   },
   {
     categoria: 'time_place',
     emoji: '⏰',
-    label: 'TIME & PLACE',
+    label: 'Tempo & Lugar',
     cor: '#f97316',
     corBg: '#fff7ed',
   },
   {
     categoria: 'challenge',
     emoji: '⚡',
-    label: 'CHALLENGE',
+    label: 'Desafio',
     cor: '#ef4444',
     corBg: '#fef2f2',
   },
   {
     categoria: 'wild',
     emoji: '🃏',
-    label: 'WILD CARD',
+    label: 'Carta Curinga',
     cor: '#a855f7',
     corBg: '#faf5ff',
   },
   {
     categoria: 'mystery',
     emoji: '🎲',
-    label: 'MYSTERY',
+    label: 'Mistério',
     cor: '#eab308',
     corBg: '#fefce8',
   },
@@ -93,4 +93,4 @@ export const CHALLENGE_NIVEL_MIN = 4;
 export const TIMER_MULTIPLA_ESCOLHA = 30;
 export const TIMER_VF = 20;
 export const TIMER_LIGAR = 45;
-export const DURACAO_RESULTADO = 4000;
+export const DURACAO_RESULTADO = 2000;

@@ -50,7 +50,7 @@ export async function POST(
         nome: config.nome,
         cor: config.cor,
         emoji: config.emoji,
-        posicao: 0,
+        posicao: 1,
         estrelas: { grammar: 1, vocabulary: 1, time_place: 1, challenge: 1 },
         ultimo_checkpoint: 0,
         double_ativo: false,

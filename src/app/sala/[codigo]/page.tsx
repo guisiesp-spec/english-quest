@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, use } from 'react';
 import type { Pergunta, CategoriasDado, Grupo } from '@/lib/tipos';
 import { useJogo } from '@/hooks/useJogo';
-import { DADO_CONFIG, DURACAO_RESULTADO } from '@/lib/constantes';
+import { DADO_CONFIG, DURACAO_RESULTADO, CASAS_ESPECIAIS } from '@/lib/constantes';
 import Dado from '@/components/Dado';
 import MinigameRenderer from '@/components/MinigameRenderer';
 import WildCard from '@/components/WildCard';
@@ -12,30 +12,35 @@ import { getEstrelaCategoria } from '@/lib/jogoLocal';
 const MUTED  = '#7D8590';
 const BORDER = '#21262D';
 
-// ── SVG pawn shape ────────────────────────────────────────────────────────────
-function PawnShape({ color, active = false, mine = false, size = 34 }: {
+// ── SVG pawn shape — classic cone (wide base → narrows up) with ball on tip ──
+function PawnShape({ color, active = false, mine = false, size = 32 }: {
   color: string; active?: boolean; mine?: boolean; size?: number;
 }) {
+  // viewBox: 0 0 40 60
+  // Ball sits at the NARROW tip (top). Cone widens downward. Flat disc base.
   return (
-    <svg width={size} height={Math.round(size * 1.45)} viewBox="0 0 40 58" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={Math.round(size * 1.5)} viewBox="0 0 40 60" xmlns="http://www.w3.org/2000/svg">
       {/* Drop shadow */}
-      <ellipse cx="20" cy="56" rx="11" ry="3" fill="rgba(0,0,0,0.45)" />
-      {/* Base */}
-      <path d="M11 50 Q9 40 14 33 L26 33 Q31 40 29 50 Q28 53 20 53 Q12 53 11 50Z" fill={color} />
-      {/* Neck */}
-      <rect x="16.5" y="22" width="7" height="12" rx="2.5" fill={color} />
-      {/* Head */}
-      <circle cx="20" cy="14" r="11" fill={color} />
-      {/* White outlines */}
-      <circle cx="20" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.5" />
-      <path d="M11 50 Q9 40 14 33 L26 33 Q31 40 29 50 Q28 53 20 53 Q12 53 11 50Z"
-            fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-      {/* Shine on head */}
-      <circle cx="14" cy="9" r="4.5" fill="white" opacity="0.18" />
-      {/* Active ring (gold) */}
-      {active && <circle cx="20" cy="14" r="14.5" fill="none" stroke="#FCD34D" strokeWidth="3" />}
-      {/* Mine ring (white) */}
-      {mine && !active && <circle cx="20" cy="14" r="14" fill="none" stroke="white" strokeWidth="2.5" opacity="0.65" />}
+      <ellipse cx="20" cy="57" rx="13" ry="3.5" fill="rgba(0,0,0,0.45)" />
+      {/* Base disc (bottom) */}
+      <ellipse cx="20" cy="50" rx="14" ry="5" fill={color} />
+      {/* Cone body: narrow at top (y≈22) → wide at base (y≈50) */}
+      <path d="M14 22 L5 50 L35 50 L26 22 Z" fill={color} />
+      {/* Smooth the cone edges */}
+      <path d="M14 22 Q7 36 5 50 L35 50 Q33 36 26 22 Z" fill={color} />
+      {/* Neck connector between cone tip and ball */}
+      <rect x="17" y="16" width="6" height="8" rx="3" fill={color} />
+      {/* Ball at top tip */}
+      <circle cx="20" cy="9" r="9" fill={color} />
+      {/* White stroke outlines */}
+      <circle cx="20" cy="9" r="9" fill="none" stroke="rgba(255,255,255,0.32)" strokeWidth="1.5" />
+      <ellipse cx="20" cy="50" rx="14" ry="5" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+      {/* Shine on ball */}
+      <circle cx="13" cy="5" r="4" fill="white" opacity="0.22" />
+      {/* Active glow ring (gold, around ball) */}
+      {active && <circle cx="20" cy="9" r="13" fill="none" stroke="#FCD34D" strokeWidth="3" />}
+      {/* Mine indicator (white ring) */}
+      {mine && !active && <circle cx="20" cy="9" r="12.5" fill="none" stroke="white" strokeWidth="2.5" opacity="0.7" />}
     </svg>
   );
 }
@@ -158,16 +163,21 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
               const pos  = Math.max(1, g.posicao);
               const { x, y } = nodePos(pos);
 
+              // Place pawn base just ABOVE the node circle (node radius in SVG units → %)
+              const nodeR   = CASAS_ESPECIAIS[pos] ? 30 : 22;
+              const adjustedY = y - nodeR - 4; // 4px gap above node
+
               // Offset stacked pieces on the same square
               const aqui    = grupos.filter(h => Math.max(1, h.posicao) === pos);
               const myIdx   = aqui.findIndex(h => h.id === g.id);
-              const offsetX = aqui.length === 1 ? 0 : (myIdx % 2 === 0 ? -13 : 13);
-              const offsetY = aqui.length > 2 ? (Math.floor(myIdx / 2) * -20) : 0;
+              const offsetX = aqui.length === 1 ? 0 : (myIdx % 2 === 0 ? -12 : 12);
+              const stackY  = Math.floor(myIdx / 2) * -6; // stack upward if > 2
 
               const leftPct = `${(x / MAPA_W) * 100}%`;
-              const topPct  = `${(y / MAPA_H) * 100}%`;
+              const topPct  = `${(adjustedY / MAPA_H) * 100}%`;
               const isActive = g.id === sala.turno_grupo_id;
               const isMine   = g.id === meuGrupoId;
+              const sz = isMine ? 34 : 28;
 
               return (
                 <div
@@ -176,13 +186,13 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
                     position: 'absolute',
                     left: leftPct,
                     top: topPct,
-                    transform: `translate(calc(-50% + ${offsetX}px), calc(-100% + ${offsetY}px))`,
+                    transform: `translate(calc(-50% + ${offsetX}px), calc(-100% + ${stackY}px))`,
                     transition: 'left 1.0s cubic-bezier(0.34, 1.56, 0.64, 1), top 1.0s cubic-bezier(0.34, 1.56, 0.64, 1)',
                     zIndex: isMine ? 2 : 1,
-                    filter: isActive ? `drop-shadow(0 0 8px ${g.cor})` : undefined,
+                    filter: isActive ? `drop-shadow(0 0 10px ${g.cor})` : `drop-shadow(0 2px 4px rgba(0,0,0,0.5))`,
                   }}
                 >
-                  <PawnShape color={g.cor} active={isActive} mine={isMine} size={isMine ? 36 : 30} />
+                  <PawnShape color={g.cor} active={isActive} mine={isMine} size={sz} />
                 </div>
               );
             })}
