@@ -229,15 +229,6 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
               <h1 className="font-black text-white text-base leading-tight truncate">
                 {meuGrupo?.nome ?? 'Entrando...'}
               </h1>
-              <span className="text-xs font-bold flex-shrink-0" style={{ color: MUTED }}>
-                {meuGrupo?.posicao ?? 0}/50
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full mt-1 overflow-hidden" style={{ backgroundColor: BORDER }}>
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${((meuGrupo?.posicao ?? 0) / 50) * 100}%`, backgroundColor: cor }}
-              />
             </div>
           </div>
         </div>
@@ -589,7 +580,7 @@ function FimDeJogo({ grupos, meuGrupoId }: { grupos: Grupo[]; meuGrupoId: string
           {winner?.emoji} {winner?.nome}
         </p>
         <p className="text-white font-bold text-sm">
-          Casa <span style={{ color: winner?.cor }}>{winner?.posicao}</span> de 50
+          Casa <span style={{ color: winner?.cor }}>{winner?.posicao}</span>
         </p>
         {meuGrupoId && (
           <div

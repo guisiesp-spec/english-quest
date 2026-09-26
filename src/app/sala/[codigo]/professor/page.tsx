@@ -215,6 +215,29 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
             )}
           </div>
 
+          {/* ── LIBERAR PRÓXIMA PERGUNTA ── */}
+          {sala.status === 'jogando' && sala.fase === 'resultado' && sala.resultado_atual && !sala.resultado_atual.correto && (
+            <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">{sala.resultado_atual.resposta_dada === '__timeout__' ? '⏰' : '😬'}</span>
+                <div>
+                  <p className="text-amber-300 font-bold text-sm">
+                    {sala.resultado_atual.resposta_dada === '__timeout__' ? 'Tempo esgotado' : 'Grupo errou'} — aguardando liberação
+                  </p>
+                  {grupoAtual && (
+                    <p className="text-amber-400/60 text-xs">{grupoAtual.emoji} {grupoAtual.nome}</p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={avancarTurno}
+                className="w-full bg-amber-500 hover:bg-amber-400 active:scale-[.97] text-black font-black py-3 rounded-xl text-sm transition-all"
+              >
+                ✅ Liberar próxima pergunta
+              </button>
+            </div>
+          )}
+
           {/* ── GRUPOS ── */}
           {grupos.length > 0 && (
             <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-5">
