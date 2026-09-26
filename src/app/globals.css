@@ -106,6 +106,15 @@ body {
   50%       { filter: drop-shadow(0 0 20px currentColor); }
 }
 
+/* Dice bounce: lifts up during roll, drops as it lands */
+@keyframes diceBounce {
+  0%   { transform: translateY(0px); }
+  15%  { transform: translateY(-28px); }
+  80%  { transform: translateY(-28px); }
+  100% { transform: translateY(0px); }
+}
+.dice-rolling { animation: diceBounce 1.8s ease forwards; }
+
 .animate-pop-in    { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 .animate-slide-up  { animation: slideUp 0.3s ease forwards; }
 .animate-pawn-glow { animation: pulseGlow 2s ease infinite; }

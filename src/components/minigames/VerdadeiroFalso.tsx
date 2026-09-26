@@ -21,7 +21,7 @@ export default function VerdadeiroFalso({ pergunta, onResponder, readonly }: Pro
         if (t <= 1) {
           clearInterval(id);
           setExpirado(true);
-          onResponder('', false);
+          onResponder('__timeout__', false);
           return 0;
         }
         return t - 1;
@@ -38,59 +38,86 @@ export default function VerdadeiroFalso({ pergunta, onResponder, readonly }: Pro
 
   const pct = (tempo / TIMER_VF) * 100;
   const corTimer = pct > 50 ? '#22c55e' : pct > 25 ? '#f59e0b' : '#ef4444';
+  const respondido = !!(selecionada || expirado);
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-lg mx-auto">
-      <div className="text-xs text-slate-400 font-medium text-center">{pergunta.unidade}</div>
-
-      {!readonly && (
-        <div className="w-full bg-slate-100 rounded-full h-2">
-          <div className="h-2 rounded-full transition-all duration-1000" style={{ width: `${pct}%`, backgroundColor: corTimer }} />
+      {pergunta.unidade && (
+        <div className="text-xs text-slate-400 font-medium text-center">
+          {pergunta.unidade} da apostila
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border-2 border-slate-200 p-5 text-center">
-        <p className="text-sm text-slate-500 mb-2 font-medium">VERDADEIRO ou FALSO?</p>
-        <p className="text-xl font-bold text-slate-800 leading-snug">{pergunta.enunciado}</p>
+      {!readonly && (
+        <div className="w-full rounded-full h-2" style={{ background: '#e5e5e5' }}>
+          <div
+            className="h-2 rounded-full"
+            style={{ width: `${pct}%`, backgroundColor: corTimer, transition: 'width 1s linear, background-color 0.3s' }}
+          />
+        </div>
+      )}
+
+      <div style={{ background: '#fff', borderRadius: 20, padding: '20px 18px', textAlign: 'center', border: '2px solid #e5e5e5' }}>
+        <p style={{ fontSize: 12, color: '#afafaf', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+          VERDADEIRO ou FALSO?
+        </p>
+        <p style={{ fontSize: 18, fontWeight: 800, color: '#3c3c3c', lineHeight: 1.4, margin: 0 }}>
+          {pergunta.enunciado}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         {(['verdadeiro', 'falso'] as const).map((opcao) => {
           const correto = opcao === pergunta.resposta;
-          let bg = opcao === 'verdadeiro'
-            ? 'bg-green-50 hover:bg-green-100 border-green-300'
-            : 'bg-red-50 hover:bg-red-100 border-red-300';
+          const estaErrado = respondido && opcao === selecionada && !correto;
+          const estaCerto  = respondido && correto;
+          const opaque     = respondido && !correto && opcao !== selecionada;
 
-          if (selecionada || expirado) {
-            if (correto) bg = 'bg-green-200 border-green-500';
-            else if (opcao === selecionada) bg = 'bg-red-200 border-red-500';
-            else bg = 'bg-slate-50 border-slate-200 opacity-40';
-          }
+          let bg         = opcao === 'verdadeiro' ? '#22c55e' : '#ef4444';
+          let shadow     = opcao === 'verdadeiro' ? '#16a34a' : '#dc2626';
+          let textColor  = '#ffffff';
+
+          if (estaCerto)  { bg = '#16a34a'; shadow = '#166534'; }
+          if (estaErrado) { bg = '#dc2626'; shadow = '#991b1b'; }
+          if (opaque)     { bg = '#d1d5db'; shadow = '#9ca3af'; textColor = '#6b7280'; }
+
+          const icon = estaCerto ? '✓' : estaErrado ? '✗' : opcao === 'verdadeiro' ? '✅' : '❌';
 
           return (
             <button
               key={opcao}
               onClick={() => escolher(opcao)}
-              disabled={!!selecionada || expirado || readonly}
-              className={`
-                p-6 rounded-2xl border-2 font-black text-2xl
-                transition-all duration-150 active:scale-95
-                ${bg}
-                ${!selecionada && !expirado && !readonly ? 'cursor-pointer' : 'cursor-default'}
-              `}
+              disabled={respondido || !!readonly}
+              style={{
+                padding: '18px 8px',
+                borderRadius: 16,
+                border: 'none',
+                borderBottom: `4px solid ${shadow}`,
+                backgroundColor: bg,
+                color: textColor,
+                cursor: respondido || readonly ? 'default' : 'pointer',
+                transition: 'all 0.15s',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8,
+                opacity: opaque ? 0.55 : 1,
+              }}
             >
-              {opcao === 'verdadeiro' ? '✅ VERDADEIRO' : '❌ FALSO'}
+              <span style={{ fontSize: 30, lineHeight: 1 }}>{icon}</span>
+              <span style={{ fontSize: 15, fontWeight: 900, letterSpacing: 0.5 }}>
+                {opcao === 'verdadeiro' ? 'VERDADEIRO' : 'FALSO'}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {(selecionada || expirado) && pergunta.explicacao && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
+      {respondido && pergunta.explicacao && (
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#1e40af' }}>
           💡 {pergunta.explicacao}
         </div>
       )}
-      {expirado && <p className="text-center text-red-500 font-bold">⏰ Tempo esgotado!</p>}
     </div>
   );
 }

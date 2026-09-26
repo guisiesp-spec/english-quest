@@ -21,7 +21,7 @@ export default function MultiplaEscolha({ pergunta, onResponder, readonly }: Pro
         if (t <= 1) {
           clearInterval(id);
           setExpirado(true);
-          onResponder('', false);
+          onResponder('__timeout__', false);
           return 0;
         }
         return t - 1;
@@ -69,7 +69,7 @@ export default function MultiplaEscolha({ pergunta, onResponder, readonly }: Pro
       }}>
         {pergunta.unidade && (
           <p style={{ fontSize: 11, color: '#afafaf', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
-            {pergunta.unidade}
+            {pergunta.unidade} da apostila
           </p>
         )}
         <p style={{ fontSize: 18, fontWeight: 800, color: '#3c3c3c', lineHeight: 1.4, margin: 0 }}>

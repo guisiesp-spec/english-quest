@@ -51,8 +51,8 @@ export default function Dado({ onRolar, disabled, categoriaForçada }: Props) {
     let ticks = 0;
 
     const interval = setInterval(() => {
-      currX += 90 + Math.floor(Math.random() * 180);
-      currY += 60 + Math.floor(Math.random() * 180);
+      currX += 60 + Math.floor(Math.random() * 120);
+      currY += 40 + Math.floor(Math.random() * 120);
       setRot({ x: currX, y: currY });
       ticks++;
 
@@ -72,7 +72,7 @@ export default function Dado({ onRolar, disabled, categoriaForçada }: Props) {
           setTimeout(() => onRolar(sorteada), 400);
         }, 750);
       }
-    }, 100);
+    }, 150);
   }
 
   const config = resultado ? DADO_CONFIG.find(d => d.categoria === resultado) : null;
@@ -86,7 +86,10 @@ export default function Dado({ onRolar, disabled, categoriaForçada }: Props) {
         style={{ background: 'none', border: 'none', padding: '0 0 24px 0' }}
         aria-label="Rolar dado"
       >
-        <div className="dice-scene" style={{ filter: config ? `drop-shadow(0 0 20px ${config.cor}88)` : 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}>
+        <div
+          className={`dice-scene${rolling && !settling ? ' dice-rolling' : ''}`}
+          style={{ filter: config ? `drop-shadow(0 0 20px ${config.cor}88)` : 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}
+        >
           <div
             className="dice-cube"
             style={{

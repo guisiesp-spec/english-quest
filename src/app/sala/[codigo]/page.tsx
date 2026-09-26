@@ -55,11 +55,13 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   const [esperandoWild, setEsperandoWild]    = useState(false);
   const [respondendo, setRespondendo]        = useState(false);
   const [mostrarSorteio, setMostrarSorteio]  = useState(false);
+  const [mostrarVezDe, setMostrarVezDe]      = useState(false);
 
   const avancarRef    = useRef(jogo.avancarTurno);
   const boardRef      = useRef<HTMLDivElement>(null);
   const prevStatusRef = useRef<string | undefined>(undefined);
   const prevPosRef    = useRef<number>(-1);
+  const prevTurnoRef  = useRef<string | null>(null);
 
   const meuGrupo   = grupos.find(g => g.id === meuGrupoId) ?? null;
   const ehMeuTurno = sala?.turno_grupo_id === meuGrupoId;
@@ -69,12 +71,24 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
 
   useEffect(() => { avancarRef.current = jogo.avancarTurno; });
 
-  // Client-side auto-advance
+  // Client-side auto-advance — only for correct answers; wrong answers wait for professor
   useEffect(() => {
     if (sala?.fase !== 'resultado' || !ehMeuTurno) return;
+    if (!sala.resultado_atual?.correto) return;
     const t = setTimeout(() => avancarRef.current(), DURACAO_RESULTADO);
     return () => clearTimeout(t);
-  }, [sala?.fase, ehMeuTurno]);
+  }, [sala?.fase, ehMeuTurno, sala?.resultado_atual?.correto]);
+
+  // Turn-change popup — shows for 2.5s when it becomes another group's turn
+  useEffect(() => {
+    const turno = sala?.turno_grupo_id;
+    if (!turno || turno === prevTurnoRef.current) return;
+    prevTurnoRef.current = turno;
+    if (turno === meuGrupoId) return;
+    setMostrarVezDe(true);
+    const t = setTimeout(() => setMostrarVezDe(false), 2500);
+    return () => clearTimeout(t);
+  }, [sala?.turno_grupo_id, meuGrupoId]);
 
   // Show sorteio animation when game starts
   useEffect(() => {
@@ -141,6 +155,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
 
   const temPopup =
     mostrarSorteio ||
+    mostrarVezDe ||
     sala.status === 'finalizado' ||
     (sala.status === 'jogando' && (
       (ehMeuTurno && sala.fase === 'dado' && !esperandoWild) ||
@@ -231,26 +246,23 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
         </div>
       </header>
 
-      {/* ── TURN INDICATOR (floating bottom, only when no popup) ── */}
-      {!temPopup && sala.status === 'jogando' && (
-        <div className="absolute bottom-8 inset-x-0 flex justify-center z-20 pointer-events-none animate-slide-up">
-          {ehMeuTurno ? (
+      {/* ── TURN POPUP (centered, shown for 2.5s when another group's turn starts) ── */}
+      {mostrarVezDe && !mostrarSorteio && grupoAtual && (
+        <Overlay>
+          <div
+            className="rounded-3xl p-8 text-center border animate-pop-in"
+            style={{ backgroundColor: '#161B22', borderColor: BORDER }}
+          >
             <div
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm animate-pulse"
-              style={{ backgroundColor: cor + '22', color: cor, border: `1px solid ${cor}55`, backdropFilter: 'blur(10px)' }}
+              className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
+              style={{ backgroundColor: grupoAtual.cor + '22', border: `2px solid ${grupoAtual.cor}` }}
             >
-              🎯 Sua vez! Aguarde o popup
+              {grupoAtual.emoji}
             </div>
-          ) : (
-            <div
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm"
-              style={{ background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(10px)', border: `1px solid ${BORDER}` }}
-            >
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: grupoAtual?.cor }} />
-              <span className="text-white">Vez de <strong style={{ color: grupoAtual?.cor }}>{grupoAtual?.nome}</strong></span>
-            </div>
-          )}
-        </div>
+            <p className="text-white text-base mb-1" style={{ color: MUTED }}>Vez de</p>
+            <p className="font-black text-3xl" style={{ color: grupoAtual.cor }}>{grupoAtual.nome}</p>
+          </div>
+        </Overlay>
       )}
 
       {/* ── WAITING STATE ── */}
@@ -479,21 +491,26 @@ function SorteioTimes({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedo
 function ResultadoPopup({
   resultado, ehMeuTurno, cor, grupoAtual,
 }: {
-  resultado: { correto: boolean; casas_avancadas: number; resposta_correta: string | Record<string, string> };
+  resultado: { correto: boolean; casas_avancadas: number; resposta_correta: string | Record<string, string>; resposta_dada?: string };
   ehMeuTurno: boolean;
   cor?: string;
   grupoAtual?: Grupo;
 }) {
-  const ok = resultado.correto;
+  const ok        = resultado.correto;
+  const isTimeout = resultado.resposta_dada === '__timeout__';
+
+  const bgClass   = ok ? 'bg-emerald-500/10 border-emerald-500/30'
+                  : isTimeout ? 'bg-amber-500/10 border-amber-500/30'
+                  : 'bg-red-500/10 border-red-500/30';
+  const textClass = ok ? 'text-emerald-400' : isTimeout ? 'text-amber-400' : 'text-red-400';
+  const emoji     = ok ? '🎉' : isTimeout ? '⏰' : '😬';
+  const titulo    = ok ? 'Acertou!' : isTimeout ? 'Tempo esgotado!' : 'Errou!';
+
   return (
-    <div
-      className={`rounded-3xl p-6 text-center border flex flex-col items-center gap-3 animate-pop-in ${
-        ok ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'
-      }`}
-    >
-      <span className="text-6xl">{ok ? '🎉' : '😬'}</span>
-      <h3 className={`text-2xl font-black ${ok ? 'text-emerald-400' : 'text-red-400'}`}>
-        {ok ? 'Acertou!' : 'Errou!'}
+    <div className={`rounded-3xl p-6 text-center border flex flex-col items-center gap-3 animate-pop-in ${bgClass}`}>
+      <span className="text-6xl">{emoji}</span>
+      <h3 className={`text-2xl font-black ${textClass}`}>
+        {titulo}
         {!ehMeuTurno && grupoAtual && (
           <span className="text-base font-normal opacity-60"> ({grupoAtual.nome})</span>
         )}
@@ -501,11 +518,17 @@ function ResultadoPopup({
       <p className="text-white font-bold text-lg">
         {ok
           ? `+${resultado.casas_avancadas} casa${resultado.casas_avancadas !== 1 ? 's' : ''} 🚀`
+          : isTimeout ? 'Sem avanço ⏱️'
           : 'Estrelas resetadas ⭐'}
       </p>
-      {!ok && resultado.resposta_correta && (
+      {!ok && !isTimeout && resultado.resposta_correta && (
         <p className="text-sm" style={{ color: MUTED }}>
           Certo: <strong className="text-white">{String(resultado.resposta_correta)}</strong>
+        </p>
+      )}
+      {!ok && !isTimeout && ehMeuTurno && (
+        <p className="text-xs mt-1 animate-pulse" style={{ color: MUTED }}>
+          Aguardando professor liberar próxima pergunta…
         </p>
       )}
     </div>
