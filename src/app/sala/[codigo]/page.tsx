@@ -512,12 +512,11 @@ function ResultadoPopup({
           <span className="text-base font-normal opacity-60"> ({grupoAtual.nome})</span>
         )}
       </h3>
-      <p className="text-white font-bold text-lg">
-        {ok
-          ? `+${resultado.casas_avancadas} casa${resultado.casas_avancadas !== 1 ? 's' : ''} 🚀`
-          : isTimeout ? 'Sem avanço ⏱️'
-          : 'Estrelas resetadas ⭐'}
-      </p>
+      {ok && (
+        <p className="text-white font-bold text-lg">
+          +{resultado.casas_avancadas} casa{resultado.casas_avancadas !== 1 ? 's' : ''} 🚀
+        </p>
+      )}
       {!ok && !isTimeout && resultado.resposta_correta && (
         <p className="text-sm" style={{ color: MUTED }}>
           Certo: <strong className="text-white">{String(resultado.resposta_correta)}</strong>
