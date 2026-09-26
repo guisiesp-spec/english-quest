@@ -34,10 +34,11 @@ export default function Home() {
 
       {/* Logo */}
       <div className="flex flex-col items-center gap-3 mb-10">
-        <div className="w-20 h-20 rounded-3xl bg-[#161B22] border border-[#30363D] flex items-center justify-center text-4xl shadow-2xl">
-          🎮
+        <div className="w-20 h-20 rounded-3xl bg-white border border-[#30363D] flex items-center justify-center shadow-2xl overflow-hidden p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/siesp-logo.png" alt="Siesp" className="w-full h-full object-contain" />
         </div>
-        <h1 className="text-3xl font-black text-white tracking-tight">English Quest</h1>
+        <h1 className="text-3xl font-black text-white tracking-tight">Siesp Route</h1>
         <p className="text-[#7D8590] text-sm">Jogo educacional multiplayer</p>
         {local && (
           <span className="text-[11px] font-bold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-3 py-1 rounded-full">
