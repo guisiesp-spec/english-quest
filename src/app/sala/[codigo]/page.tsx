@@ -6,43 +6,54 @@ import { DADO_CONFIG, DURACAO_RESULTADO } from '@/lib/constantes';
 import Dado from '@/components/Dado';
 import MinigameRenderer from '@/components/MinigameRenderer';
 import WildCard from '@/components/WildCard';
-import MapaModal from '@/components/MapaModal';
+import MapaPath, { nodePos, MAPA_W, MAPA_H } from '@/components/MapaPath';
 import { getEstrelaCategoria } from '@/lib/jogoLocal';
 
-// ── Design tokens ────────────────────────────────────────────────────────────
-const BG      = '#0D1117';
-const SURFACE = '#161B22';
-const BORDER  = '#21262D';
-const MUTED   = '#7D8590';
+const MUTED  = '#7D8590';
+const BORDER = '#21262D';
 
 export default function SalaJogador({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
   const jogo = useJogo(codigo);
   const { sala, grupos, carregando, erro } = jogo;
 
-  const [meuGrupoId, setMeuGrupoId] = useState<string | null>(null);
+  const [meuGrupoId, setMeuGrupoId]     = useState<string | null>(null);
   const [perguntasFeitas, setPerguntasFeitas] = useState<string[]>([]);
-  const [esperandoWild, setEsperandoWild] = useState(false);
-  const [respondendo, setRespondendo] = useState(false);
-  const [mapaAberto, setMapaAberto] = useState(false);
-  const avancarRef = useRef(jogo.avancarTurno);
+  const [esperandoWild, setEsperandoWild]    = useState(false);
+  const [respondendo, setRespondendo]        = useState(false);
+  const [mostrarSorteio, setMostrarSorteio]  = useState(false);
 
-  const meuGrupo    = grupos.find(g => g.id === meuGrupoId) ?? null;
-  const ehMeuTurno  = sala?.turno_grupo_id === meuGrupoId;
-  const grupoAtual  = grupos.find(g => g.id === sala?.turno_grupo_id);
-  const configCat   = sala?.categoria_atual ? DADO_CONFIG.find(d => d.categoria === sala.categoria_atual) : null;
-  const cor         = meuGrupo?.cor ?? '#6366F1';
+  const avancarRef    = useRef(jogo.avancarTurno);
+  const boardRef      = useRef<HTMLDivElement>(null);
+  const prevStatusRef = useRef<string | undefined>(undefined);
+  const prevPosRef    = useRef<number>(-1);
 
-  // Keep ref fresh so the timeout closure below always calls the latest version
+  const meuGrupo   = grupos.find(g => g.id === meuGrupoId) ?? null;
+  const ehMeuTurno = sala?.turno_grupo_id === meuGrupoId;
+  const grupoAtual = grupos.find(g => g.id === sala?.turno_grupo_id);
+  const configCat  = sala?.categoria_atual ? DADO_CONFIG.find(d => d.categoria === sala.categoria_atual) : null;
+  const cor        = meuGrupo?.cor ?? '#6366F1';
+
   useEffect(() => { avancarRef.current = jogo.avancarTurno; });
 
-  // Client-side auto-advance: replaces the server setTimeout (which doesn't survive serverless)
+  // Client-side auto-advance
   useEffect(() => {
     if (sala?.fase !== 'resultado' || !ehMeuTurno) return;
     const t = setTimeout(() => avancarRef.current(), DURACAO_RESULTADO);
     return () => clearTimeout(t);
   }, [sala?.fase, ehMeuTurno]);
 
+  // Show sorteio animation when game starts
+  useEffect(() => {
+    if (prevStatusRef.current === 'aguardando' && sala?.status === 'jogando') {
+      setMostrarSorteio(true);
+      const t = setTimeout(() => setMostrarSorteio(false), 3800);
+      return () => clearTimeout(t);
+    }
+    if (sala?.status) prevStatusRef.current = sala.status;
+  }, [sala?.status]);
+
+  // Enter room
   useEffect(() => {
     if (!sala || meuGrupoId) return;
     const chave = `grupo_${sala.id}`;
@@ -52,6 +63,22 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
       if (g) { setMeuGrupoId(g.id); localStorage.setItem(chave, g.id); }
     });
   }, [sala?.id, grupos.length]);
+
+  // Auto-scroll board to player's piece
+  useEffect(() => {
+    if (!meuGrupo || !boardRef.current) return;
+    const pos = meuGrupo.posicao;
+    if (pos === prevPosRef.current) return;
+    prevPosRef.current = pos;
+
+    const target = Math.max(1, pos);
+    const { y: svgY } = nodePos(target);
+    const containerW  = boardRef.current.clientWidth;
+    const containerH  = boardRef.current.clientHeight;
+    const scale       = containerW / MAPA_W;
+    const scrollTop   = svgY * scale - containerH * 0.45;
+    boardRef.current.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
+  }, [meuGrupo?.posicao]);
 
   async function handleDado(cat: CategoriasDado) {
     if (!meuGrupoId) return;
@@ -79,190 +106,322 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   if (carregando) return <Splash codigo={codigo} />;
   if (erro || !sala) return <ErroTela msg={erro || 'Sala não encontrada.'} />;
 
+  const temPopup =
+    mostrarSorteio ||
+    sala.status === 'finalizado' ||
+    (sala.status === 'jogando' && (
+      (ehMeuTurno && sala.fase === 'dado' && !esperandoWild) ||
+      (ehMeuTurno && esperandoWild) ||
+      sala.fase === 'minigame' ||
+      sala.fase === 'resultado'
+    ));
+
   return (
-    <>
-      {mapaAberto && (
-        <MapaModal grupos={grupos} grupoAtual={sala.turno_grupo_id} meuGrupoId={meuGrupoId} onFechar={() => setMapaAberto(false)} />
-      )}
+    <div className="relative h-screen w-full overflow-hidden" style={{ backgroundColor: '#0D1117' }}>
 
-      <main className="min-h-screen flex flex-col" style={{ backgroundColor: BG }}>
+      {/* ── BOARD (always visible) ── */}
+      <div ref={boardRef} className="absolute inset-0 overflow-y-auto scrollbar-none">
+        <MapaPath grupos={grupos} grupoAtual={sala.turno_grupo_id} meuGrupoId={meuGrupoId} />
+      </div>
 
-        {/* ── HEADER ── */}
-        <header style={{ borderBottom: `1px solid ${BORDER}` }}>
-          {/* Grupo color strip */}
-          <div className="h-1 w-full" style={{ backgroundColor: cor }} />
-
-          <div className="px-5 pt-10 pb-4 flex items-center gap-3">
-            {/* Avatar */}
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 border-2"
-              style={{ backgroundColor: cor + '22', borderColor: cor + '66' }}
-            >
-              {meuGrupo?.emoji ?? '🎮'}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h1 className="font-black text-white text-lg leading-tight truncate">
+      {/* ── HEADER (fixed overlay) ── */}
+      <header
+        className="absolute top-0 left-0 right-0 z-20"
+        style={{ background: 'rgba(13,17,23,0.88)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${BORDER}` }}
+      >
+        <div className="px-4 pt-10 pb-2.5 flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border"
+            style={{ backgroundColor: cor + '22', borderColor: cor + '66' }}
+          >
+            {meuGrupo?.emoji ?? '🎮'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="font-black text-white text-base leading-tight truncate">
                 {meuGrupo?.nome ?? 'Entrando...'}
               </h1>
-              {/* Progress bar */}
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: BORDER }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${((meuGrupo?.posicao ?? 0) / 50) * 100}%`, backgroundColor: cor }}
-                  />
-                </div>
-                <span className="text-xs font-bold flex-shrink-0" style={{ color: MUTED }}>
-                  {meuGrupo?.posicao ?? 0}/50
-                </span>
-              </div>
+              <span className="text-xs font-bold flex-shrink-0" style={{ color: MUTED }}>
+                {meuGrupo?.posicao ?? 0}/50
+              </span>
             </div>
-
-            <button
-              onClick={() => setMapaAberto(true)}
-              className="flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all hover:opacity-80"
-              style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}
-            >
-              <span className="text-base">🗺</span>
-              <span className="text-[9px] font-semibold" style={{ color: MUTED }}>Mapa</span>
-            </button>
+            <div className="h-1.5 rounded-full mt-1 overflow-hidden" style={{ backgroundColor: BORDER }}>
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${((meuGrupo?.posicao ?? 0) / 50) * 100}%`, backgroundColor: cor }}
+              />
+            </div>
           </div>
+        </div>
 
-          {/* Estrelas */}
-          {meuGrupo && (
-            <div className="px-5 pb-3 flex gap-4">
-              {(['grammar', 'vocabulary', 'time_place'] as CategoriasDado[]).map(cat => {
-                const n = getEstrelaCategoria(meuGrupo, cat);
-                const label: Record<string, string> = { grammar: 'Grammar', vocabulary: 'Vocab', time_place: 'Time' };
-                const icon: Record<string, string>  = { grammar: '📝', vocabulary: '🗣️', time_place: '⏰' };
-                return (
-                  <div key={cat} className="flex items-center gap-1.5">
-                    <span className="text-sm">{icon[cat]}</span>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={`text-[10px] ${i < n ? 'text-amber-400' : 'text-[#30363D]'}`}>★</span>
-                      ))}
-                    </div>
+        {/* Stars */}
+        {meuGrupo && (
+          <div className="px-4 pb-2.5 flex gap-4">
+            {(['grammar', 'vocabulary', 'time_place'] as CategoriasDado[]).map(cat => {
+              const n    = getEstrelaCategoria(meuGrupo, cat);
+              const icon: Record<string, string> = { grammar: '📝', vocabulary: '🗣️', time_place: '⏰' };
+              return (
+                <div key={cat} className="flex items-center gap-1">
+                  <span className="text-xs">{icon[cat]}</span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className={`text-[9px] ${i < n ? 'text-amber-400' : 'text-[#30363D]'}`}>★</span>
+                    ))}
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </header>
+
+      {/* ── TURN INDICATOR (floating bottom, only when no popup) ── */}
+      {!temPopup && sala.status === 'jogando' && (
+        <div className="absolute bottom-8 inset-x-0 flex justify-center z-20 pointer-events-none animate-slide-up">
+          {ehMeuTurno ? (
+            <div
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm animate-pulse"
+              style={{ backgroundColor: cor + '22', color: cor, border: `1px solid ${cor}55`, backdropFilter: 'blur(10px)' }}
+            >
+              🎯 Sua vez! Aguarde o popup
             </div>
-          )}
-        </header>
-
-        {/* ── BODY ── */}
-        <div className="flex-1 px-5 py-5 max-w-lg mx-auto w-full flex flex-col gap-4">
-
-          {/* FIM */}
-          {sala.status === 'finalizado' && (
-            <FimDeJogo grupos={grupos} meuGrupoId={meuGrupoId} onMapa={() => setMapaAberto(true)} />
-          )}
-
-          {/* AGUARDANDO */}
-          {sala.status === 'aguardando' && (
-            <Aguardando codigo={codigo} grupos={grupos} meuGrupoId={meuGrupoId} cor={cor} />
-          )}
-
-          {/* JOGO */}
-          {sala.status === 'jogando' && (
-            <>
-              {/* Turno banner */}
-              <div className="flex items-center justify-between">
-                {ehMeuTurno ? (
-                  <div
-                    className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold animate-pulse"
-                    style={{ backgroundColor: cor + '22', color: cor, border: `1px solid ${cor}55` }}
-                  >
-                    🎯 Sua vez!
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: grupoAtual?.cor }} />
-                    <span className="text-sm" style={{ color: MUTED }}>
-                      Vez de <strong style={{ color: grupoAtual?.cor }}>{grupoAtual?.nome}</strong>
-                    </span>
-                  </div>
-                )}
-                {configCat && (
-                  <span
-                    className="text-xs font-bold px-3 py-1 rounded-full"
-                    style={{ backgroundColor: configCat.corBg, color: configCat.cor }}
-                  >
-                    {configCat.emoji} {configCat.label}
-                  </span>
-                )}
-              </div>
-
-              {/* Wild Card */}
-              {ehMeuTurno && esperandoWild && <WildCard onEscolher={handleWild} />}
-
-              {/* Dado */}
-              {ehMeuTurno && sala.fase === 'dado' && !esperandoWild && (
-                <div className="flex flex-col items-center gap-3 py-4">
-                  <p className="text-sm" style={{ color: MUTED }}>Role o dado para sortear a categoria</p>
-                  <Dado onRolar={handleDado} />
-                </div>
-              )}
-
-              {/* Minigame */}
-              {sala.fase === 'minigame' && sala.pergunta_atual && !esperandoWild && (
-                <div className="flex flex-col gap-3">
-                  {configCat && (
-                    <div
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border"
-                      style={{ backgroundColor: configCat.corBg + '33', color: configCat.cor, borderColor: configCat.cor + '44' }}
-                    >
-                      <span className="text-base">{configCat.emoji}</span>
-                      <span>{configCat.label}</span>
-                      {meuGrupo && (
-                        <span className="ml-auto text-xs opacity-60">
-                          Nível {getEstrelaCategoria(meuGrupo, sala.categoria_atual!)} ★
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <MinigameRenderer
-                    pergunta={sala.pergunta_atual as Pergunta}
-                    onResponder={ehMeuTurno ? handleResposta : () => {}}
-                    readonly={!ehMeuTurno}
-                  />
-                </div>
-              )}
-
-              {/* Resultado */}
-              {sala.fase === 'resultado' && sala.resultado_atual && (
-                <Resultado resultado={sala.resultado_atual} ehMeuTurno={ehMeuTurno} cor={cor} />
-              )}
-            </>
+          ) : (
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm"
+              style={{ background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(10px)', border: `1px solid ${BORDER}` }}
+            >
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: grupoAtual?.cor }} />
+              <span className="text-white">Vez de <strong style={{ color: grupoAtual?.cor }}>{grupoAtual?.nome}</strong></span>
+            </div>
           )}
         </div>
-      </main>
-    </>
+      )}
+
+      {/* ── WAITING STATE ── */}
+      {sala.status === 'aguardando' && (
+        <div
+          className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-10"
+          style={{ background: 'linear-gradient(to top, rgba(13,17,23,0.97) 65%, transparent)' }}
+        >
+          <AguardandoOverlay codigo={codigo} grupos={grupos} meuGrupoId={meuGrupoId} cor={cor} />
+        </div>
+      )}
+
+      {/* ── POPUPS (overlay + blur) ── */}
+
+      {mostrarSorteio && (
+        <Overlay>
+          <SorteioModal grupos={grupos} vencedorId={sala.turno_grupo_id} />
+        </Overlay>
+      )}
+
+      {!mostrarSorteio && sala.status === 'jogando' && ehMeuTurno && esperandoWild && (
+        <Overlay><WildCard onEscolher={handleWild} /></Overlay>
+      )}
+
+      {!mostrarSorteio && sala.status === 'jogando' && ehMeuTurno && sala.fase === 'dado' && !esperandoWild && (
+        <Overlay>
+          <div className="flex flex-col items-center gap-4 py-2 animate-pop-in">
+            <p className="text-xl font-black text-white">🎲 Role o dado!</p>
+            <p className="text-sm" style={{ color: MUTED }}>Sorteia a categoria da pergunta</p>
+            <Dado onRolar={handleDado} />
+          </div>
+        </Overlay>
+      )}
+
+      {!mostrarSorteio && sala.status === 'jogando' && sala.fase === 'minigame' && sala.pergunta_atual && (
+        <Overlay>
+          <div className="flex flex-col gap-3 w-full animate-pop-in">
+            {configCat && (
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border"
+                style={{ backgroundColor: configCat.corBg + '33', color: configCat.cor, borderColor: configCat.cor + '44' }}
+              >
+                <span className="text-base">{configCat.emoji}</span>
+                <span>{configCat.label}</span>
+                {meuGrupo && ehMeuTurno && (
+                  <span className="ml-auto text-xs opacity-60">Nível {getEstrelaCategoria(meuGrupo, sala.categoria_atual!)} ★</span>
+                )}
+                {!ehMeuTurno && grupoAtual && (
+                  <span className="ml-auto text-xs font-bold" style={{ color: grupoAtual.cor }}>● {grupoAtual.nome}</span>
+                )}
+              </div>
+            )}
+            <MinigameRenderer
+              pergunta={sala.pergunta_atual as Pergunta}
+              onResponder={ehMeuTurno ? handleResposta : () => {}}
+              readonly={!ehMeuTurno}
+            />
+          </div>
+        </Overlay>
+      )}
+
+      {!mostrarSorteio && sala.status === 'jogando' && sala.fase === 'resultado' && sala.resultado_atual && (
+        <Overlay>
+          <ResultadoPopup
+            resultado={sala.resultado_atual}
+            ehMeuTurno={ehMeuTurno}
+            cor={cor}
+            grupoAtual={grupoAtual}
+          />
+        </Overlay>
+      )}
+
+      {sala.status === 'finalizado' && (
+        <Overlay>
+          <FimDeJogo grupos={grupos} meuGrupoId={meuGrupoId} />
+        </Overlay>
+      )}
+    </div>
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Overlay shell ─────────────────────────────────────────────────────────────
+function Overlay({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="absolute inset-0 z-30 flex items-center justify-center p-4"
+      style={{ backdropFilter: 'blur(10px)', background: 'rgba(13,17,23,0.72)' }}
+    >
+      <div className="w-full max-w-sm">{children}</div>
+    </div>
+  );
+}
 
-function Resultado({
-  resultado, ehMeuTurno, cor,
+// ── Sorteio modal ─────────────────────────────────────────────────────────────
+function SorteioModal({ grupos, vencedorId }: { grupos: Grupo[]; vencedorId: string | null }) {
+  const [revelado, setRevelado] = useState(false);
+  const vencedor = grupos.find(g => g.id === vencedorId);
+
+  useEffect(() => {
+    const t = setTimeout(() => setRevelado(true), 2200);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div
+      className="text-center rounded-3xl p-6 border animate-pop-in"
+      style={{ backgroundColor: '#161B22', borderColor: BORDER }}
+    >
+      {!revelado && (
+        <p className="text-white font-black text-xl mb-5">
+          {grupos.length <= 2 ? '🪙 Jogando moeda...' : '🎲 Sorteando time...'}
+        </p>
+      )}
+
+      {grupos.length <= 2
+        ? <MoedaFlip grupos={grupos} vencedor={vencedor} revelado={revelado} />
+        : <SorteioTimes grupos={grupos} vencedor={vencedor} revelado={revelado} />
+      }
+
+      {revelado && vencedor && (
+        <div className="mt-6 animate-pop-in">
+          <p className="font-black text-3xl" style={{ color: vencedor.cor }}>
+            {vencedor.emoji} {vencedor.nome}
+          </p>
+          <p className="text-white text-lg mt-1">começa primeiro! 🚀</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MoedaFlip({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedor?: Grupo; revelado: boolean }) {
+  const [face, setFace] = useState(0);
+
+  useEffect(() => {
+    if (revelado) {
+      const winIdx = grupos.findIndex(g => g.id === vencedor?.id);
+      setFace(winIdx >= 0 ? winIdx % 2 : 0);
+      return;
+    }
+    const t = setInterval(() => setFace(f => (f + 1) % 2), 120);
+    return () => clearInterval(t);
+  }, [revelado]);
+
+  const g = grupos[face] ?? grupos[0];
+
+  return (
+    <div className="flex justify-center">
+      <div
+        className="w-28 h-28 rounded-full flex items-center justify-center text-5xl border-4 border-white"
+        style={{
+          backgroundColor: g.cor,
+          boxShadow: `0 0 50px ${g.cor}99`,
+          transition: revelado ? 'background-color 0.4s, box-shadow 0.4s' : 'background-color 0.1s',
+        }}
+      >
+        {g.emoji}
+      </div>
+    </div>
+  );
+}
+
+function SorteioTimes({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedor?: Grupo; revelado: boolean }) {
+  return (
+    <div className="flex flex-wrap justify-center gap-4">
+      {grupos.map((g, i) => {
+        const isWinner = g.id === vencedor?.id;
+        const dimmed   = revelado && !isWinner;
+        return (
+          <div
+            key={g.id}
+            className="flex flex-col items-center gap-1.5"
+            style={{
+              opacity:   dimmed ? 0.2 : 1,
+              transform: isWinner && revelado ? 'scale(1.25)' : 'scale(1)',
+              transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center text-3xl border-2"
+              style={{
+                backgroundColor: g.cor,
+                borderColor:     isWinner && revelado ? '#FCD34D' : g.cor,
+                boxShadow:       isWinner && revelado ? `0 0 25px ${g.cor}` : 'none',
+                animation:       !revelado ? `tokenBounce 0.4s ${i * 0.12}s infinite alternate` : 'none',
+              }}
+            >
+              {g.emoji}
+            </div>
+            <span className="text-xs text-white font-bold">{g.nome}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Resultado popup ───────────────────────────────────────────────────────────
+function ResultadoPopup({
+  resultado, ehMeuTurno, cor, grupoAtual,
 }: {
   resultado: { correto: boolean; casas_avancadas: number; resposta_correta: string | Record<string, string> };
-  ehMeuTurno: boolean; cor?: string;
+  ehMeuTurno: boolean;
+  cor?: string;
+  grupoAtual?: Grupo;
 }) {
   const ok = resultado.correto;
   return (
-    <div className={`rounded-2xl p-6 text-center border flex flex-col items-center gap-3 ${ok ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+    <div
+      className={`rounded-3xl p-6 text-center border flex flex-col items-center gap-3 animate-pop-in ${
+        ok ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'
+      }`}
+    >
       <span className="text-6xl">{ok ? '🎉' : '😬'}</span>
       <h3 className={`text-2xl font-black ${ok ? 'text-emerald-400' : 'text-red-400'}`}>
         {ok ? 'Acertou!' : 'Errou!'}
-        {!ehMeuTurno && <span className="text-base font-normal opacity-60 ml-2">(deles)</span>}
+        {!ehMeuTurno && grupoAtual && (
+          <span className="text-base font-normal opacity-60"> ({grupoAtual.nome})</span>
+        )}
       </h3>
       <p className="text-white font-bold text-lg">
-        {ok ? `+${resultado.casas_avancadas} casa${resultado.casas_avancadas !== 1 ? 's' : ''} 🚀` : 'Estrelas resetadas ⭐'}
+        {ok
+          ? `+${resultado.casas_avancadas} casa${resultado.casas_avancadas !== 1 ? 's' : ''} 🚀`
+          : 'Estrelas resetadas ⭐'}
       </p>
       {!ok && resultado.resposta_correta && (
-        <p className="text-sm" style={{ color: '#7D8590' }}>
+        <p className="text-sm" style={{ color: MUTED }}>
           Certo: <strong className="text-white">{String(resultado.resposta_correta)}</strong>
         </p>
       )}
@@ -270,31 +429,34 @@ function Resultado({
   );
 }
 
-function Aguardando({ codigo, grupos, meuGrupoId, cor }: {
+// ── Aguardando overlay ────────────────────────────────────────────────────────
+function AguardandoOverlay({ codigo, grupos, meuGrupoId, cor }: {
   codigo: string; grupos: Grupo[]; meuGrupoId: string | null; cor: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-5 py-8">
-      <div className="text-5xl">⏳</div>
+    <div className="flex flex-col gap-3">
       <div className="text-center">
-        <h2 className="font-black text-white text-xl">Aguardando início</h2>
-        <p className="text-[#7D8590] text-sm mt-1">O professor vai iniciar o jogo em breve</p>
+        <p className="text-white font-black text-lg">Aguardando início</p>
+        <p className="text-sm" style={{ color: MUTED }}>O professor vai iniciar o jogo</p>
       </div>
       <div
-        className="px-8 py-4 rounded-2xl text-center border"
+        className="px-6 py-3 rounded-2xl text-center border mx-auto"
         style={{ backgroundColor: cor + '11', borderColor: cor + '44' }}
       >
-        <p className="text-[#7D8590] text-xs mb-1">Código da sala</p>
-        <p className="font-black text-3xl tracking-[.3em] text-white font-mono">{codigo}</p>
+        <p className="text-xs mb-0.5" style={{ color: MUTED }}>Código da sala</p>
+        <p className="font-black text-2xl tracking-[.3em] text-white font-mono">{codigo}</p>
       </div>
       {grupos.length > 0 && (
-        <div className="w-full flex flex-col gap-2">
-          <p className="text-[#30363D] text-xs uppercase tracking-widest text-center">Grupos</p>
+        <div className="flex flex-wrap justify-center gap-2">
           {grupos.map(g => (
-            <div key={g.id} className="flex items-center gap-3 bg-[#161B22] border border-[#21262D] rounded-xl px-4 py-2.5">
-              <span className="text-xl">{g.emoji}</span>
-              <span className="font-bold flex-1" style={{ color: g.cor }}>{g.nome}</span>
-              {g.id === meuGrupoId && <span className="text-xs text-[#30363D]">você</span>}
+            <div
+              key={g.id}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm"
+              style={{ backgroundColor: g.cor + '18', borderColor: g.cor + '44' }}
+            >
+              <span>{g.emoji}</span>
+              <span className="font-bold" style={{ color: g.cor }}>{g.nome}</span>
+              {g.id === meuGrupoId && <span className="text-[10px]" style={{ color: MUTED }}>você</span>}
             </div>
           ))}
         </div>
@@ -303,62 +465,66 @@ function Aguardando({ codigo, grupos, meuGrupoId, cor }: {
   );
 }
 
-function FimDeJogo({ grupos, meuGrupoId, onMapa }: {
-  grupos: Grupo[]; meuGrupoId: string | null; onMapa: () => void;
-}) {
-  const sorted  = [...grupos].sort((a, b) => b.posicao - a.posicao);
-  const meuIdx  = sorted.findIndex(g => g.id === meuGrupoId);
-  const MEDALS  = ['🥇', '🥈', '🥉'];
+// ── Fim de jogo ───────────────────────────────────────────────────────────────
+function FimDeJogo({ grupos, meuGrupoId }: { grupos: Grupo[]; meuGrupoId: string | null }) {
+  const sorted = [...grupos].sort((a, b) => b.posicao - a.posicao);
+  const meuIdx = sorted.findIndex(g => g.id === meuGrupoId);
+  const MEDALS = ['🥇', '🥈', '🥉'];
 
   return (
-    <div className="flex flex-col items-center gap-5 py-6">
-      <div className="text-6xl">🏆</div>
-      <div className="text-center">
-        <h2 className="font-black text-white text-2xl">Fim de jogo!</h2>
+    <div className="rounded-3xl p-6 border animate-pop-in" style={{ backgroundColor: '#161B22', borderColor: BORDER }}>
+      <div className="text-center mb-5">
+        <span className="text-5xl">🏆</span>
+        <h2 className="font-black text-white text-2xl mt-2">Fim de jogo!</h2>
         {meuGrupoId && (
-          <p className="text-[#7D8590] mt-1">
+          <p className="mt-1" style={{ color: MUTED }}>
             {meuIdx === 0 ? '🎉 Vocês venceram!' : `Vocês ficaram em ${meuIdx + 1}º lugar`}
           </p>
         )}
       </div>
-      <div className="w-full flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         {sorted.map((g, i) => (
-          <div key={g.id} className="flex items-center gap-3 rounded-xl px-4 py-3 border"
+          <div
+            key={g.id}
+            className="flex items-center gap-3 rounded-xl px-4 py-3 border"
             style={{
-              backgroundColor: g.id === meuGrupoId ? g.cor + '18' : '#161B22',
-              borderColor:     g.id === meuGrupoId ? g.cor + '55' : '#21262D',
-            }}>
-            <span className="text-xl w-7">{MEDALS[i] ?? `${i+1}.`}</span>
+              backgroundColor: g.id === meuGrupoId ? g.cor + '18' : 'transparent',
+              borderColor:     g.id === meuGrupoId ? g.cor + '55' : BORDER,
+            }}
+          >
+            <span className="text-xl w-7">{MEDALS[i] ?? `${i + 1}.`}</span>
             <span className="text-xl">{g.emoji}</span>
             <span className="font-bold flex-1" style={{ color: g.cor }}>{g.nome}</span>
-            <span className="text-sm font-bold text-[#7D8590]">Casa {g.posicao}</span>
+            <span className="text-sm font-bold" style={{ color: MUTED }}>Casa {g.posicao}</span>
           </div>
         ))}
       </div>
-      <button onClick={onMapa} className="text-[#7D8590] text-sm underline">Ver mapa final</button>
     </div>
   );
 }
 
+// ── Splash / Error ────────────────────────────────────────────────────────────
 function Splash({ codigo }: { codigo: string }) {
-  const [segundos, setSegundos] = useState(0);
+  const [s, setS] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setSegundos(s => s + 1), 1000);
+    const t = setInterval(() => setS(x => x + 1), 1000);
     return () => clearInterval(t);
   }, []);
   return (
     <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center gap-4 px-6">
       <span className="text-4xl animate-pulse">🎮</span>
-      <p className="text-[#7D8590] text-sm">Conectando à sala <strong className="text-white font-mono">{codigo}</strong>…</p>
-      {segundos >= 5 && (
+      <p className="text-sm" style={{ color: MUTED }}>
+        Conectando à sala <strong className="text-white font-mono">{codigo}</strong>…
+      </p>
+      {s >= 5 && (
         <div className="mt-2 flex flex-col items-center gap-3 text-center">
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 text-amber-300 text-sm max-w-xs">
-            {segundos >= 10
-              ? '❌ Sala não encontrada ou servidor offline. Verifique o código e o WiFi.'
+            {s >= 10
+              ? '❌ Sala não encontrada ou servidor offline.'
               : '⏳ Demorando mais que o esperado…'}
           </div>
           <a href="/" className="text-sm font-bold px-5 py-2.5 rounded-xl bg-[#161B22] border border-[#30363D] text-white">
-            ← Voltar ao início
+            ← Voltar
           </a>
         </div>
       )}

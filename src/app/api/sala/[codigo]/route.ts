@@ -61,7 +61,7 @@ export async function POST(
     }
 
     case 'INICIAR_JOGO': {
-      const ordem = grupos.map((g) => g.id);
+      const ordem = [...grupos.map((g) => g.id)].sort(() => Math.random() - 0.5);
       sala = {
         ...sala,
         status: 'jogando',
