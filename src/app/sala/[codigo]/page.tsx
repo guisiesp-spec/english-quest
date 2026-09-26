@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, use } from 'react';
 import type { Pergunta, CategoriasDado, Grupo } from '@/lib/tipos';
 import { useJogo } from '@/hooks/useJogo';
-import { DADO_CONFIG, DURACAO_RESULTADO } from '@/lib/constantes';
+import { DADO_CONFIG, DURACAO_RESULTADO, TIMER_DADO } from '@/lib/constantes';
 import Dado from '@/components/Dado';
 import MinigameRenderer from '@/components/MinigameRenderer';
 import WildCard from '@/components/WildCard';
@@ -56,8 +56,10 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   const [respondendo, setRespondendo]        = useState(false);
   const [mostrarSorteio, setMostrarSorteio]  = useState(false);
   const [mostrarVezDe, setMostrarVezDe]      = useState(false);
+  const [tempoDado, setTempoDado]            = useState(TIMER_DADO);
 
   const avancarRef    = useRef(jogo.avancarTurno);
+  const rolarRef      = useRef(jogo.rolarDado);
   const boardRef      = useRef<HTMLDivElement>(null);
   const prevStatusRef = useRef<string | undefined>(undefined);
   const prevPosRef    = useRef<number>(-1);
@@ -70,6 +72,28 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   const cor        = meuGrupo?.cor ?? '#6366F1';
 
   useEffect(() => { avancarRef.current = jogo.avancarTurno; });
+  useEffect(() => { rolarRef.current = jogo.rolarDado; });
+
+  // Dice timer — auto-rolls a random category if player doesn't roll in time
+  useEffect(() => {
+    if (sala?.fase !== 'dado' || !ehMeuTurno || !meuGrupoId || esperandoWild) {
+      setTempoDado(TIMER_DADO);
+      return;
+    }
+    setTempoDado(TIMER_DADO);
+    const id = setInterval(() => {
+      setTempoDado(t => {
+        if (t <= 1) {
+          clearInterval(id);
+          const cats: CategoriasDado[] = ['grammar', 'vocabulary', 'time_place'];
+          rolarRef.current(meuGrupoId, cats[Math.floor(Math.random() * cats.length)], []);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [sala?.fase, ehMeuTurno, meuGrupoId, esperandoWild]);
 
   // Client-side auto-advance — only for correct answers; wrong answers wait for professor
   useEffect(() => {
@@ -272,8 +296,25 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
           {ehMeuTurno && esperandoWild ? (
             <WildCard onEscolher={handleWild} />
           ) : ehMeuTurno ? (
-            <div className="flex flex-col items-center gap-4 py-2 animate-pop-in">
-              <p className="text-xl font-black text-white">🎲 Role o dado!</p>
+            <div className="flex flex-col items-center gap-4 py-2 animate-pop-in w-full">
+              {/* Timer bar */}
+              <div className="w-full" style={{ maxWidth: 280 }}>
+                <div className="flex justify-between text-xs font-bold mb-1" style={{ color: MUTED }}>
+                  <span>🎲 Role o dado!</span>
+                  <span style={{ color: tempoDado <= 5 ? '#ef4444' : tempoDado <= 10 ? '#f59e0b' : '#58cc02' }}>
+                    {tempoDado}s
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: 6, background: '#21262D', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${(tempoDado / TIMER_DADO) * 100}%`,
+                    backgroundColor: tempoDado <= 5 ? '#ef4444' : tempoDado <= 10 ? '#f59e0b' : '#58cc02',
+                    borderRadius: 99,
+                    transition: 'width 1s linear, background-color 0.3s',
+                  }} />
+                </div>
+              </div>
               <p className="text-sm" style={{ color: MUTED }}>Sorteia a categoria da pergunta</p>
               <Dado onRolar={handleDado} />
             </div>

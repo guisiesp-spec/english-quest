@@ -2,9 +2,11 @@
 import { use, useState, useEffect } from 'react';
 import { useJogo } from '@/hooks/useJogo';
 import type { Pergunta, PerguntaMultiplaEscolha, PerguntaVF, PerguntaLigar } from '@/lib/tipos';
+import { DADO_CONFIG } from '@/lib/constantes';
 import Tabuleiro from '@/components/Tabuleiro';
 import QRCode from '@/components/QRCode';
 import MapaModal from '@/components/MapaModal';
+import MinigameRenderer from '@/components/MinigameRenderer';
 
 export default function ProfessorPage({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
@@ -241,6 +243,34 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
               </div>
             </div>
           )}
+
+          {/* ── PERGUNTA AO VIVO ── */}
+          {sala.status === 'jogando' && sala.fase === 'minigame' && sala.pergunta_atual && (() => {
+            const configCat = sala.categoria_atual ? DADO_CONFIG.find(d => d.categoria === sala.categoria_atual) : null;
+            return (
+              <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  {configCat && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border"
+                      style={{ backgroundColor: configCat.corBg + '22', color: configCat.cor, borderColor: configCat.cor + '44' }}>
+                      <span>{configCat.emoji}</span>
+                      <span>{configCat.label}</span>
+                    </div>
+                  )}
+                  {grupoAtual && (
+                    <span className="text-xs font-bold" style={{ color: grupoAtual.cor }}>
+                      {grupoAtual.emoji} {grupoAtual.nome}
+                    </span>
+                  )}
+                </div>
+                <MinigameRenderer
+                  pergunta={sala.pergunta_atual as Pergunta}
+                  onResponder={() => {}}
+                  readonly
+                />
+              </div>
+            );
+          })()}
 
           {/* ── LIBERAR PRÓXIMA PERGUNTA + GABARITO PROFESSOR ── */}
           {sala.status === 'jogando' && sala.fase === 'resultado' && sala.resultado_atual && !sala.resultado_atual.correto && (

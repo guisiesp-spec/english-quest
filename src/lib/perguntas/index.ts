@@ -14,12 +14,14 @@ import { perguntasUnidade10 } from './unidade10';
 import { perguntasUnidade12 } from './unidade12';
 import { perguntasUnidade13 } from './unidade13';
 import { perguntasUnidade14 } from './unidade14';
+import { perguntasExtras2 } from './extras2';
 
 export const todasPerguntas: Pergunta[] = [
   ...perguntasUnidade1,
   ...perguntasUnidade2,
   ...perguntasUnidade3,
   ...perguntasExtras,
+  ...perguntasExtras2,
   ...perguntasUnidade4,
   ...perguntasUnidade5,
   ...perguntasUnidade6,
