@@ -17,7 +17,7 @@ export default function MultiplaEscolha({ pergunta, onResponder, readonly }: Pro
   useEffect(() => {
     if (readonly || selecionada || expirado) return;
     const id = setInterval(() => {
-      setTempo((t) => {
+      setTempo(t => {
         if (t <= 1) {
           clearInterval(id);
           setExpirado(true);
@@ -37,61 +37,103 @@ export default function MultiplaEscolha({ pergunta, onResponder, readonly }: Pro
   }
 
   const pct = (tempo / TIMER_MULTIPLA_ESCOLHA) * 100;
-  const corTimer = pct > 50 ? '#22c55e' : pct > 25 ? '#f59e0b' : '#ef4444';
+  const corTimer = pct > 50 ? '#58cc02' : pct > 25 ? '#ffc800' : '#ff4b4b';
+  const respondido = !!(selecionada || expirado);
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-lg mx-auto">
-      {/* Unidade */}
-      <div className="text-xs text-slate-400 font-medium text-center">{pergunta.unidade}</div>
+    <div className="flex flex-col gap-3 w-full">
 
-      {/* Timer */}
+      {/* Timer bar */}
       {!readonly && (
-        <div className="w-full bg-slate-100 rounded-full h-2">
+        <div style={{ width: '100%', height: 8, background: '#e5e5e5', borderRadius: 99, overflow: 'hidden' }}>
           <div
-            className="h-2 rounded-full transition-all duration-1000"
-            style={{ width: `${pct}%`, backgroundColor: corTimer }}
+            style={{
+              height: '100%',
+              width: `${pct}%`,
+              backgroundColor: corTimer,
+              borderRadius: 99,
+              transition: 'width 1s linear, background-color 0.3s',
+            }}
           />
         </div>
       )}
 
-      {/* Enunciado */}
-      <div className="bg-white rounded-2xl border-2 border-slate-200 p-5 text-center">
-        <p className="text-xl font-bold text-slate-800 leading-snug">{pergunta.enunciado}</p>
+      {/* Question */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 20,
+        padding: '20px 18px',
+        textAlign: 'center',
+        boxShadow: '0 2px 0 #e5e5e5',
+        border: '2px solid #e5e5e5',
+      }}>
+        {pergunta.unidade && (
+          <p style={{ fontSize: 11, color: '#afafaf', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+            {pergunta.unidade}
+          </p>
+        )}
+        <p style={{ fontSize: 18, fontWeight: 800, color: '#3c3c3c', lineHeight: 1.4, margin: 0 }}>
+          {pergunta.enunciado}
+        </p>
       </div>
 
-      {/* Opções */}
-      <div className="grid grid-cols-2 gap-3">
-        {pergunta.opcoes.map((opcao) => {
+      {/* Options — Duolingo style: single column, 3D border effect */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {pergunta.opcoes.map(opcao => {
           const correto = opcao === pergunta.resposta;
-          let bg = 'bg-white hover:bg-slate-50 border-slate-200';
-          if (selecionada || expirado) {
-            if (correto) bg = 'bg-green-100 border-green-400';
-            else if (opcao === selecionada) bg = 'bg-red-100 border-red-400';
-            else bg = 'bg-slate-50 border-slate-200 opacity-50';
+          const estaErrado = respondido && opcao === selecionada && !correto;
+          const estaCerto  = respondido && correto;
+          const opaque     = respondido && !correto && opcao !== selecionada;
+
+          let bg            = '#ffffff';
+          let borderColor   = '#e5e5e5';
+          let shadowColor   = '#e5e5e5';
+          let textColor     = '#3c3c3c';
+          let icon          = '';
+
+          if (estaCerto) {
+            bg = '#d7ffb8'; borderColor = '#58cc02'; shadowColor = '#58a700'; textColor = '#3c3c3c'; icon = ' ✓';
+          } else if (estaErrado) {
+            bg = '#ffd9d9'; borderColor = '#ff4b4b'; shadowColor = '#ea2b2b'; textColor = '#3c3c3c'; icon = ' ✗';
+          } else if (opaque) {
+            bg = '#f7f7f7'; borderColor = '#e5e5e5'; shadowColor = '#e5e5e5'; textColor = '#afafaf';
           }
 
           return (
             <button
               key={opcao}
               onClick={() => escolher(opcao)}
-              disabled={!!selecionada || expirado || readonly}
-              className={`
-                p-4 rounded-xl border-2 font-bold text-slate-700 text-center
-                transition-all duration-150 active:scale-95
-                ${bg}
-                ${!selecionada && !expirado && !readonly ? 'cursor-pointer shadow-sm' : 'cursor-default'}
-              `}
+              disabled={respondido || !!readonly}
+              style={{
+                background: bg,
+                border: `2px solid ${borderColor}`,
+                borderBottom: `4px solid ${shadowColor}`,
+                borderRadius: 14,
+                padding: '14px 18px',
+                fontSize: 15,
+                fontWeight: 700,
+                color: textColor,
+                textAlign: 'center',
+                cursor: respondido || readonly ? 'default' : 'pointer',
+                transition: 'background 0.15s, border-color 0.15s, opacity 0.15s, transform 0.1s',
+                transform: 'none',
+                opacity: opaque ? 0.5 : 1,
+                width: '100%',
+              }}
+              onMouseDown={e => { if (!respondido && !readonly) (e.currentTarget.style.transform = 'translateY(2px)'); }}
+              onMouseUp={e => { (e.currentTarget.style.transform = 'none'); }}
+              onMouseLeave={e => { (e.currentTarget.style.transform = 'none'); }}
             >
-              {opcao}
-              {(selecionada || expirado) && correto && ' ✅'}
-              {selecionada === opcao && !correto && ' ❌'}
+              {opcao}{icon}
             </button>
           );
         })}
       </div>
 
       {expirado && (
-        <p className="text-center text-red-500 font-bold">⏰ Tempo esgotado!</p>
+        <p style={{ textAlign: 'center', color: '#ff4b4b', fontWeight: 700, fontSize: 13 }}>
+          ⏰ Tempo esgotado!
+        </p>
       )}
     </div>
   );

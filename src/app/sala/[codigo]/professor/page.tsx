@@ -14,6 +14,17 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
   const [ip, setIp] = useState('');
 
   useEffect(() => {
+    const origin = window.location.origin;
+    const isLocal = /localhost|127\.0\.0\.1/.test(origin) || /^http:\/\/\d+\.\d+\.\d+\.\d+/.test(origin);
+
+    if (!isLocal) {
+      // Production (Vercel) — use the actual public URL
+      setSalaURL(`${origin}/sala/${codigo}`);
+      fetch(`/sala/${codigo}`).catch(() => {});
+      return;
+    }
+
+    // Local dev — try to get LAN IP so phones on same WiFi can connect
     fetch('/api/ip').then(r => r.json()).then(data => {
       const localIp = data.ips?.[0] ?? '';
       setIp(localIp);
@@ -23,7 +34,6 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
       );
     }).catch(() => setSalaURL(`http://localhost:3000/sala/${codigo}`));
 
-    // Warm up the player page bundle so Turbopack compiles it before students arrive
     fetch(`/sala/${codigo}`).catch(() => {});
   }, [codigo]);
 

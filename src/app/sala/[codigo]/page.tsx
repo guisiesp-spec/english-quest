@@ -12,6 +12,34 @@ import { getEstrelaCategoria } from '@/lib/jogoLocal';
 const MUTED  = '#7D8590';
 const BORDER = '#21262D';
 
+// ── SVG pawn shape ────────────────────────────────────────────────────────────
+function PawnShape({ color, active = false, mine = false, size = 34 }: {
+  color: string; active?: boolean; mine?: boolean; size?: number;
+}) {
+  return (
+    <svg width={size} height={Math.round(size * 1.45)} viewBox="0 0 40 58" xmlns="http://www.w3.org/2000/svg">
+      {/* Drop shadow */}
+      <ellipse cx="20" cy="56" rx="11" ry="3" fill="rgba(0,0,0,0.45)" />
+      {/* Base */}
+      <path d="M11 50 Q9 40 14 33 L26 33 Q31 40 29 50 Q28 53 20 53 Q12 53 11 50Z" fill={color} />
+      {/* Neck */}
+      <rect x="16.5" y="22" width="7" height="12" rx="2.5" fill={color} />
+      {/* Head */}
+      <circle cx="20" cy="14" r="11" fill={color} />
+      {/* White outlines */}
+      <circle cx="20" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.5" />
+      <path d="M11 50 Q9 40 14 33 L26 33 Q31 40 29 50 Q28 53 20 53 Q12 53 11 50Z"
+            fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+      {/* Shine on head */}
+      <circle cx="14" cy="9" r="4.5" fill="white" opacity="0.18" />
+      {/* Active ring (gold) */}
+      {active && <circle cx="20" cy="14" r="14.5" fill="none" stroke="#FCD34D" strokeWidth="3" />}
+      {/* Mine ring (white) */}
+      {mine && !active && <circle cx="20" cy="14" r="14" fill="none" stroke="white" strokeWidth="2.5" opacity="0.65" />}
+    </svg>
+  );
+}
+
 export default function SalaJogador({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
   const jogo = useJogo(codigo);
@@ -47,7 +75,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   useEffect(() => {
     if (prevStatusRef.current === 'aguardando' && sala?.status === 'jogando') {
       setMostrarSorteio(true);
-      const t = setTimeout(() => setMostrarSorteio(false), 3800);
+      const t = setTimeout(() => setMostrarSorteio(false), 4200);
       return () => clearTimeout(t);
     }
     if (sala?.status) prevStatusRef.current = sala.status;
@@ -121,7 +149,45 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
 
       {/* ── BOARD (always visible) ── */}
       <div ref={boardRef} className="absolute inset-0 overflow-y-auto scrollbar-none">
-        <MapaPath grupos={grupos} grupoAtual={sala.turno_grupo_id} meuGrupoId={meuGrupoId} />
+        <div style={{ position: 'relative', maxWidth: MAPA_W, margin: '0 auto' }}>
+          <MapaPath grupos={grupos} grupoAtual={sala.turno_grupo_id} meuGrupoId={meuGrupoId} />
+
+          {/* HTML pawn overlay — animates via CSS transitions on left/top % */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+            {grupos.map(g => {
+              const pos  = Math.max(1, g.posicao);
+              const { x, y } = nodePos(pos);
+
+              // Offset stacked pieces on the same square
+              const aqui    = grupos.filter(h => Math.max(1, h.posicao) === pos);
+              const myIdx   = aqui.findIndex(h => h.id === g.id);
+              const offsetX = aqui.length === 1 ? 0 : (myIdx % 2 === 0 ? -13 : 13);
+              const offsetY = aqui.length > 2 ? (Math.floor(myIdx / 2) * -20) : 0;
+
+              const leftPct = `${(x / MAPA_W) * 100}%`;
+              const topPct  = `${(y / MAPA_H) * 100}%`;
+              const isActive = g.id === sala.turno_grupo_id;
+              const isMine   = g.id === meuGrupoId;
+
+              return (
+                <div
+                  key={g.id}
+                  style={{
+                    position: 'absolute',
+                    left: leftPct,
+                    top: topPct,
+                    transform: `translate(calc(-50% + ${offsetX}px), calc(-100% + ${offsetY}px))`,
+                    transition: 'left 1.0s cubic-bezier(0.34, 1.56, 0.64, 1), top 1.0s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    zIndex: isMine ? 2 : 1,
+                    filter: isActive ? `drop-shadow(0 0 8px ${g.cor})` : undefined,
+                  }}
+                >
+                  <PawnShape color={g.cor} active={isActive} mine={isMine} size={isMine ? 36 : 30} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* ── HEADER (fixed overlay) ── */}
@@ -129,7 +195,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
         className="absolute top-0 left-0 right-0 z-20"
         style={{ background: 'rgba(13,17,23,0.88)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${BORDER}` }}
       >
-        <div className="px-4 pt-10 pb-2.5 flex items-center gap-3">
+        <div className="px-4 pt-10 pb-3 flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border"
             style={{ backgroundColor: cor + '22', borderColor: cor + '66' }}
@@ -153,26 +219,6 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
             </div>
           </div>
         </div>
-
-        {/* Stars */}
-        {meuGrupo && (
-          <div className="px-4 pb-2.5 flex gap-4">
-            {(['grammar', 'vocabulary', 'time_place'] as CategoriasDado[]).map(cat => {
-              const n    = getEstrelaCategoria(meuGrupo, cat);
-              const icon: Record<string, string> = { grammar: '📝', vocabulary: '🗣️', time_place: '⏰' };
-              return (
-                <div key={cat} className="flex items-center gap-1">
-                  <span className="text-xs">{icon[cat]}</span>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <span key={i} className={`text-[9px] ${i < n ? 'text-amber-400' : 'text-[#30363D]'}`}>★</span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </header>
 
       {/* ── TURN INDICATOR (floating bottom, only when no popup) ── */}
@@ -234,13 +280,17 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
           <div className="flex flex-col gap-3 w-full animate-pop-in">
             {configCat && (
               <div
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border"
                 style={{ backgroundColor: configCat.corBg + '33', color: configCat.cor, borderColor: configCat.cor + '44' }}
               >
                 <span className="text-base">{configCat.emoji}</span>
                 <span>{configCat.label}</span>
                 {meuGrupo && ehMeuTurno && (
-                  <span className="ml-auto text-xs opacity-60">Nível {getEstrelaCategoria(meuGrupo, sala.categoria_atual!)} ★</span>
+                  <span className="ml-auto text-xs flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} style={{ fontSize: 10, color: i < getEstrelaCategoria(meuGrupo, sala.categoria_atual!) ? '#fbbf24' : '#30363D' }}>★</span>
+                    ))}
+                  </span>
                 )}
                 {!ehMeuTurno && grupoAtual && (
                   <span className="ml-auto text-xs font-bold" style={{ color: grupoAtual.cor }}>● {grupoAtual.nome}</span>
@@ -294,7 +344,7 @@ function SorteioModal({ grupos, vencedorId }: { grupos: Grupo[]; vencedorId: str
   const vencedor = grupos.find(g => g.id === vencedorId);
 
   useEffect(() => {
-    const t = setTimeout(() => setRevelado(true), 2200);
+    const t = setTimeout(() => setRevelado(true), 2400);
     return () => clearTimeout(t);
   }, []);
 
@@ -310,7 +360,7 @@ function SorteioModal({ grupos, vencedorId }: { grupos: Grupo[]; vencedorId: str
       )}
 
       {grupos.length <= 2
-        ? <MoedaFlip grupos={grupos} vencedor={vencedor} revelado={revelado} />
+        ? <MoedaFlip3D grupos={grupos} vencedor={vencedor} revelado={revelado} />
         : <SorteioTimes grupos={grupos} vencedor={vencedor} revelado={revelado} />
       }
 
@@ -326,32 +376,58 @@ function SorteioModal({ grupos, vencedorId }: { grupos: Grupo[]; vencedorId: str
   );
 }
 
-function MoedaFlip({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedor?: Grupo; revelado: boolean }) {
-  const [face, setFace] = useState(0);
+function MoedaFlip3D({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedor?: Grupo; revelado: boolean }) {
+  const [coinRot, setCoinRot] = useState(0);
+  const [settling, setSettling] = useState(false);
+  const coinRef = useRef(0);
 
   useEffect(() => {
     if (revelado) {
+      setSettling(true);
       const winIdx = grupos.findIndex(g => g.id === vencedor?.id);
-      setFace(winIdx >= 0 ? winIdx % 2 : 0);
+      // front = team 0, back (180deg) = team 1
+      const targetAngle = winIdx === 1 ? 180 : 0;
+      const finalAngle = Math.ceil(coinRef.current / 360) * 360 + targetAngle;
+      coinRef.current = finalAngle;
+      setCoinRot(finalAngle);
       return;
     }
-    const t = setInterval(() => setFace(f => (f + 1) % 2), 120);
-    return () => clearInterval(t);
+
+    let angle = coinRef.current;
+    const interval = setInterval(() => {
+      angle += 180;
+      coinRef.current = angle;
+      setCoinRot(angle);
+    }, 130);
+    return () => clearInterval(interval);
   }, [revelado]);
 
-  const g = grupos[face] ?? grupos[0];
+  const g0 = grupos[0];
+  const g1 = grupos[1] ?? grupos[0];
 
   return (
-    <div className="flex justify-center">
+    <div className="coin-scene mx-auto">
       <div
-        className="w-28 h-28 rounded-full flex items-center justify-center text-5xl border-4 border-white"
+        className="coin-body"
         style={{
-          backgroundColor: g.cor,
-          boxShadow: `0 0 50px ${g.cor}99`,
-          transition: revelado ? 'background-color 0.4s, box-shadow 0.4s' : 'background-color 0.1s',
+          transform: `rotateY(${coinRot}deg)`,
+          transition: settling
+            ? 'transform 1.1s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            : 'transform 0.11s linear',
         }}
       >
-        {g.emoji}
+        <div
+          className="coin-face coin-face-front"
+          style={{ backgroundColor: g0?.cor ?? '#6366F1', boxShadow: `0 0 30px ${g0?.cor ?? '#6366F1'}66` }}
+        >
+          <span style={{ fontSize: 48 }}>{g0?.emoji}</span>
+        </div>
+        <div
+          className="coin-face coin-face-back"
+          style={{ backgroundColor: g1?.cor ?? '#6366F1', boxShadow: `0 0 30px ${g1?.cor ?? '#6366F1'}66` }}
+        >
+          <span style={{ fontSize: 48 }}>{g1?.emoji}</span>
+        </div>
       </div>
     </div>
   );
@@ -368,8 +444,8 @@ function SorteioTimes({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedo
             key={g.id}
             className="flex flex-col items-center gap-1.5"
             style={{
-              opacity:   dimmed ? 0.2 : 1,
-              transform: isWinner && revelado ? 'scale(1.25)' : 'scale(1)',
+              opacity:    dimmed ? 0.2 : 1,
+              transform:  isWinner && revelado ? 'scale(1.25)' : 'scale(1)',
               transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
             }}
           >
