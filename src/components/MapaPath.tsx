@@ -1,16 +1,18 @@
 'use client';
 import type { Grupo } from '@/lib/tipos';
-import { CASAS_ESPECIAIS, TOTAL_CASAS } from '@/lib/constantes';
+import { TOTAL_CASAS } from '@/lib/constantes';
 
-// ── Layout ──────────────────────────────────────────────────────────────────
+// ── Layout — 6 columns, 300 squares ──────────────────────────────────────────
 export const MAPA_W  = 320;
-const COLS    = 3;
-const COL_XS  = [58, 160, 262];
-const ROW_H   = 100;
+const COLS    = 6;
+const COL_XS  = [24, 78, 133, 187, 242, 296];
+const ROW_H   = 80;
 const ROWS    = Math.ceil(TOTAL_CASAS / COLS);
 const PAD_TOP = 72;
 const PAD_BOT = 52;
 export const MAPA_H  = ROWS * ROW_H + PAD_TOP + PAD_BOT;
+
+const NODE_R = 16;
 
 export function nodePos(n: number): { x: number; y: number } {
   const idx      = Math.max(0, n - 1);
@@ -31,7 +33,7 @@ function makePath(): string {
     const p1 = pts[i];
     const p2 = pts[i + 1];
     const p3 = pts[Math.min(pts.length - 1, i + 2)];
-    const t  = 0.38;
+    const t  = 0.35;
     const c1x = (p1.x + (p2.x - p0.x) * t).toFixed(1);
     const c1y = (p1.y + (p2.y - p0.y) * t).toFixed(1);
     const c2x = (p2.x - (p3.x - p1.x) * t).toFixed(1);
@@ -43,19 +45,14 @@ function makePath(): string {
 
 const PATH_D = makePath();
 
-const NODE: Record<string, { fill: string; stroke: string; icon: string }> = {
-  checkpoint: { fill: '#78350F', stroke: '#F59E0B', icon: '⭐' },
-  presente:   { fill: '#064E3B', stroke: '#10B981', icon: '🎁' },
-  caveira:    { fill: '#7F1D1D', stroke: '#EF4444', icon: '💀' },
-  duplo:      { fill: '#1E3A8A', stroke: '#60A5FA', icon: '🎯' },
-  troca:      { fill: '#4C1D95', stroke: '#A78BFA', icon: '🔄' },
-};
-
-const STARS = [
-  [18,35],[298,52],[14,145],[310,190],[22,280],[305,330],[16,425],[314,470],
-  [20,560],[308,605],[18,700],[312,750],[24,840],[306,892],[19,980],[316,1025],
-  [22,1110],[302,1160],[20,1250],[310,1295],[15,1380],[298,1430],
-];
+// Procedurally distributed stars across the full board height
+const STAR_COUNT = 120;
+const starField = Array.from({ length: STAR_COUNT }, (_, i) => ({
+  cx: ((i * 137.508) % (MAPA_W - 10)) + 5,
+  cy: ((i * 97.3 + 41) % (MAPA_H - 10)) + 5,
+  r: i % 4 === 0 ? 2 : 1.2,
+  op: 0.06 + (i % 6) * 0.025,
+}));
 
 export default function MapaPath({
   grupos,
@@ -78,53 +75,50 @@ export default function MapaPath({
       <rect width={MAPA_W} height={MAPA_H} fill="#0D1117" />
 
       {/* Star field */}
-      {STARS.map(([cx, cy], i) => (
-        <circle key={i} cx={cx} cy={cy} r={i % 3 === 0 ? 2 : 1.2}
-          fill="#fff" opacity={0.08 + (i % 5) * 0.04} />
+      {starField.map((s, i) => (
+        <circle key={i} cx={s.cx} cy={s.cy} r={s.r} fill="#fff" opacity={s.op} />
       ))}
 
       {/* Road layers */}
-      <path d={PATH_D} fill="none" stroke="#000"    strokeWidth={34} strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
-      <path d={PATH_D} fill="none" stroke="#1E1B4B" strokeWidth={28} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={PATH_D} fill="none" stroke="#3730A3" strokeWidth={20} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={PATH_D} fill="none" stroke="#6366F1" strokeWidth={10} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={PATH_D} fill="none" stroke="#A5B4FC" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.35} />
+      <path d={PATH_D} fill="none" stroke="#000"    strokeWidth={26} strokeLinecap="round" strokeLinejoin="round" opacity={0.5} />
+      <path d={PATH_D} fill="none" stroke="#1E1B4B" strokeWidth={21} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={PATH_D} fill="none" stroke="#3730A3" strokeWidth={15} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={PATH_D} fill="none" stroke="#6366F1" strokeWidth={7}  strokeLinecap="round" strokeLinejoin="round" />
+      <path d={PATH_D} fill="none" stroke="#A5B4FC" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.35} />
 
       {/* META */}
-      <circle cx={metaPos.x} cy={metaPos.y} r={26} fill="#1C1917" stroke="#FCD34D" strokeWidth={3} />
-      <text x={metaPos.x} y={metaPos.y} textAnchor="middle" dominantBaseline="middle" fontSize={22}>🏁</text>
-      <text x={metaPos.x} y={PAD_TOP - 4} textAnchor="middle" fontSize={10} fill="#FCD34D" fontWeight="bold" letterSpacing={2}>META</text>
+      <circle cx={metaPos.x} cy={metaPos.y} r={22} fill="#1C1917" stroke="#FCD34D" strokeWidth={3} />
+      <text x={metaPos.x} y={metaPos.y} textAnchor="middle" dominantBaseline="middle" fontSize={18}>🏁</text>
+      <text x={metaPos.x} y={PAD_TOP - 4} textAnchor="middle" fontSize={9} fill="#FCD34D" fontWeight="bold" letterSpacing={2}>META</text>
 
       {/* Nodes */}
       {Array.from({ length: TOTAL_CASAS }, (_, i) => i + 1).map(num => {
         const { x, y } = nodePos(num);
-        const especial  = CASAS_ESPECIAIS[num];
-        const nd        = especial ? NODE[especial.tipo] : null;
-        const r         = nd ? 30 : 22;
         const hasActive = grupos.some(g => g.posicao === num && g.id === grupoAtual);
+        const fontSize  = num >= 100 ? 7 : num >= 10 ? 9 : 10;
 
         return (
           <g key={num}>
-            {hasActive && <circle cx={x} cy={y} r={r + 18} fill="#FCD34D" opacity={0.12} />}
-            {nd && <circle cx={x} cy={y} r={r + 14} fill={nd.stroke} opacity={0.18} />}
-            <circle cx={x} cy={y + 5} r={r} fill="#000" opacity={0.4} />
-            <circle cx={x} cy={y} r={r}
-              fill={nd ? nd.fill : '#1E1B4B'}
-              stroke={nd ? nd.stroke : (hasActive ? '#FCD34D' : '#4338CA')}
-              strokeWidth={nd ? 3.5 : (hasActive ? 3 : 2.5)}
+            {hasActive && <circle cx={x} cy={y} r={NODE_R + 14} fill="#FCD34D" opacity={0.12} />}
+            <circle cx={x} cy={y + 4} r={NODE_R} fill="#000" opacity={0.4} />
+            <circle
+              cx={x} cy={y} r={NODE_R}
+              fill="#1E1B4B"
+              stroke={hasActive ? '#FCD34D' : '#4338CA'}
+              strokeWidth={hasActive ? 2.5 : 2}
             />
-            {!nd && <circle cx={x} cy={y - r * 0.33} r={r * 0.42} fill="white" opacity={0.07} />}
-            {nd ? (
-              <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle" fontSize={24}>{nd.icon}</text>
-            ) : (
-              <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
-                fontSize={10} fontWeight="bold" fill={hasActive ? '#FCD34D' : '#818CF8'}>{num}</text>
-            )}
+            <circle cx={x} cy={y - NODE_R * 0.33} r={NODE_R * 0.42} fill="white" opacity={0.07} />
+            <text
+              x={x} y={y + 1}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize={fontSize} fontWeight="bold"
+              fill={hasActive ? '#FCD34D' : '#818CF8'}
+            >
+              {num}
+            </text>
           </g>
         );
       })}
-
-      {/* Tokens rendered as HTML overlay in page.tsx for correct CSS animation */}
 
       {/* START */}
       <text x={startPos.x} y={MAPA_H - 12} textAnchor="middle" fontSize={10} fill="#4338CA" fontWeight="bold">🚀 START</text>

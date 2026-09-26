@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, use } from 'react';
 import type { Pergunta, CategoriasDado, Grupo } from '@/lib/tipos';
 import { useJogo } from '@/hooks/useJogo';
-import { DADO_CONFIG, DURACAO_RESULTADO, CASAS_ESPECIAIS } from '@/lib/constantes';
+import { DADO_CONFIG, DURACAO_RESULTADO } from '@/lib/constantes';
 import Dado from '@/components/Dado';
 import MinigameRenderer from '@/components/MinigameRenderer';
 import WildCard from '@/components/WildCard';
@@ -178,8 +178,8 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
               const pos  = Math.max(1, g.posicao);
               const { x, y } = nodePos(pos);
 
-              // Place pawn base just ABOVE the node circle (node radius in SVG units → %)
-              const nodeR   = CASAS_ESPECIAIS[pos] ? 30 : 22;
+              // Place pawn base just ABOVE the node circle
+              const nodeR   = 16; // matches NODE_R in MapaPath
               const adjustedY = y - nodeR - 4; // 4px gap above node
 
               // Offset stacked pieces on the same square

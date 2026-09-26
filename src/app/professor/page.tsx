@@ -102,8 +102,15 @@ export default function ProfessorNovaSala() {
         )}
 
         <a
+          href="/professor/perguntas"
+          className="text-center text-xs text-[#7D8590] hover:text-white transition-colors"
+        >
+          📚 Ver banco de perguntas
+        </a>
+
+        <a
           href="/"
-          className="text-center text-xs text-[#7D8590] hover:text-white transition-colors mt-2"
+          className="text-center text-xs text-[#7D8590] hover:text-white transition-colors"
         >
           ← Voltar
         </a>

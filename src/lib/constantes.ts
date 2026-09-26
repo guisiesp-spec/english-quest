@@ -1,6 +1,6 @@
 import type { CasaEspecial, ConfigDado, TipoCasa } from './tipos';
 
-export const TOTAL_CASAS = 50;
+export const TOTAL_CASAS = 300;
 
 export const GRUPOS_CONFIG = [
   { nome: 'Grupo Vermelho', cor: '#ef4444', corTexto: '#ffffff', emoji: '🔴', id_slot: 0 },
@@ -11,26 +11,8 @@ export const GRUPOS_CONFIG = [
   { nome: 'Grupo Laranja',  cor: '#f97316', corTexto: '#ffffff', emoji: '🟠', id_slot: 5 },
 ];
 
-export const CASAS_ESPECIAIS: Record<number, CasaEspecial> = {
-  5:  { tipo: 'checkpoint', emoji: '⭐', descricao: 'Checkpoint! Você não volta abaixo daqui.' },
-  8:  { tipo: 'presente',   emoji: '🎁', descricao: 'Presente! Avance +2 casas bônus.' },
-  10: { tipo: 'caveira',    emoji: '💀', descricao: 'Armadilha! Volte 3 casas.' },
-  12: { tipo: 'duplo',      emoji: '🎯', descricao: 'Double! Seu próximo acerto vale o dobro de casas.' },
-  15: { tipo: 'checkpoint', emoji: '⭐', descricao: 'Checkpoint! Você não volta abaixo daqui.' },
-  18: { tipo: 'troca',      emoji: '🔄', descricao: 'Troca! Escolha um grupo para trocar de posição.' },
-  20: { tipo: 'caveira',    emoji: '💀', descricao: 'Armadilha! Volte 3 casas.' },
-  22: { tipo: 'presente',   emoji: '🎁', descricao: 'Presente! Avance +2 casas bônus.' },
-  25: { tipo: 'checkpoint', emoji: '⭐', descricao: 'Checkpoint! Você não volta abaixo daqui.' },
-  28: { tipo: 'duplo',      emoji: '🎯', descricao: 'Double! Seu próximo acerto vale o dobro de casas.' },
-  30: { tipo: 'caveira',    emoji: '💀', descricao: 'Armadilha! Volte 3 casas.' },
-  32: { tipo: 'troca',      emoji: '🔄', descricao: 'Troca! Escolha um grupo para trocar de posição.' },
-  35: { tipo: 'checkpoint', emoji: '⭐', descricao: 'Checkpoint! Você não volta abaixo daqui.' },
-  38: { tipo: 'presente',   emoji: '🎁', descricao: 'Presente! Avance +2 casas bônus.' },
-  40: { tipo: 'caveira',    emoji: '💀', descricao: 'Armadilha! Volte 3 casas.' },
-  42: { tipo: 'duplo',      emoji: '🎯', descricao: 'Double!' },
-  45: { tipo: 'checkpoint', emoji: '⭐', descricao: 'Checkpoint! Você não volta abaixo daqui.' },
-  48: { tipo: 'troca',      emoji: '🔄', descricao: 'Troca! Escolha um grupo para trocar de posição.' },
-};
+// No special squares — all positions are plain numbered nodes
+export const CASAS_ESPECIAIS: Record<number, CasaEspecial> = {};
 
 export function getTipoCasa(posicao: number): TipoCasa {
   if (posicao === 0) return 'inicio';

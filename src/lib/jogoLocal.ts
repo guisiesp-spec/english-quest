@@ -3,7 +3,7 @@
  * Must NOT import supabase (server-side API routes can't use it).
  */
 import type { Grupo, CategoriasDado } from './tipos';
-import { CASAS_ESPECIAIS, TOTAL_CASAS } from './constantes';
+import { TOTAL_CASAS } from './constantes';
 
 export const GRUPOS_SLOTS = [
   { nome: 'Grupo Vermelho', cor: '#ef4444', emoji: '🔴' },
@@ -34,8 +34,9 @@ export function calcularCasasAvancadas(
   doubleAtivo: boolean,
 ): number {
   if (!correto) return 0;
-  let casas = nivel;
-  if (categoria === 'challenge') casas = 3;
+  // Scale for 300-square board: nivel × 6 (6, 12, 18, 24, 30)
+  let casas = nivel * 6;
+  if (categoria === 'challenge') casas = 20;
   if (doubleAtivo) casas *= 2;
   return casas;
 }
@@ -46,13 +47,6 @@ export function novaEstrela(estrelaAtual: number, correto: boolean, categoria: C
   return Math.min(estrelaAtual + 1, 5);
 }
 
-export function calcularNovaPosicao(posicaoAtual: number, casasAvancadas: number, ultimoCheckpoint: number): number {
-  const nova = Math.min(posicaoAtual + casasAvancadas, TOTAL_CASAS);
-  const casaEspecial = CASAS_ESPECIAIS[nova];
-  if (!casaEspecial) return nova;
-  switch (casaEspecial.tipo) {
-    case 'presente': return Math.min(nova + 2, TOTAL_CASAS);
-    case 'caveira':  return Math.max(nova - 3, ultimoCheckpoint);
-    default:         return nova;
-  }
+export function calcularNovaPosicao(posicaoAtual: number, casasAvancadas: number, _ultimoCheckpoint: number): number {
+  return Math.min(posicaoAtual + casasAvancadas, TOTAL_CASAS);
 }
