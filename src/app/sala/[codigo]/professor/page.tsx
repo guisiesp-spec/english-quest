@@ -13,6 +13,7 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
   const [salaURL, setSalaURL] = useState('');
   const [ip, setIp] = useState('');
   const [confirmEncerrar, setConfirmEncerrar] = useState(false);
+  const [confirmRemover, setConfirmRemover] = useState<{ id: string; nome: string; cor: string; emoji: string } | null>(null);
 
   useEffect(() => {
     const origin = window.location.origin;
@@ -55,6 +56,33 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
 
   return (
     <>
+      {/* Confirmação remover grupo */}
+      {confirmRemover && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+          <div className="bg-[#161B22] border border-red-500/30 rounded-3xl p-6 w-full max-w-sm text-center flex flex-col gap-4">
+            <span className="text-4xl">{confirmRemover.emoji}</span>
+            <h2 className="text-white font-black text-xl">Remover equipe?</h2>
+            <p className="text-[#7D8590] text-sm leading-relaxed">
+              <span style={{ color: confirmRemover.cor }} className="font-bold">{confirmRemover.nome}</span> será removida da sala permanentemente.
+            </p>
+            <div className="flex gap-3 mt-1">
+              <button
+                onClick={() => setConfirmRemover(null)}
+                className="flex-1 py-3 rounded-xl font-bold text-sm bg-[#21262D] text-[#7D8590] hover:text-white transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => { await removerGrupo(confirmRemover.id); setConfirmRemover(null); }}
+                className="flex-1 py-3 rounded-xl font-black text-sm bg-red-600 hover:bg-red-500 text-white transition-all active:scale-[.97]"
+              >
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Confirmação encerrar */}
       {confirmEncerrar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
@@ -371,7 +399,7 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
                         +
                       </button>
                       {sala.status !== 'finalizado' && (
-                        <button onClick={() => removerGrupo(g.id)}
+                        <button onClick={() => setConfirmRemover({ id: g.id, nome: g.nome, cor: g.cor, emoji: g.emoji })}
                           className="w-7 h-7 rounded-lg font-black text-sm bg-red-500/10 hover:bg-red-500/30 text-red-400 border border-red-500/20 transition-all active:scale-95"
                           title="Remover equipe">
                           🗑
