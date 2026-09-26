@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { storeSnapshot, storeSalaSave, storeGrupoAdd, storeGrupoUpdate } from '@/lib/store';
+import { storeSnapshot, storeSalaSave, storeGrupoAdd, storeGrupoUpdate, storeGrupoRemove } from '@/lib/store';
 import type { Grupo, Sala, CategoriasDado, Pergunta, ResultadoMinigame } from '@/lib/tipos';
 import { sortearPergunta } from '@/lib/perguntas';
 import {
@@ -179,6 +179,13 @@ export async function POST(
     case 'ENCERRAR_JOGO': {
       sala = { ...sala, status: 'finalizado', fase: 'fim' };
       await storeSalaSave(sala);
+      return NextResponse.json({ sala, grupos });
+    }
+
+    case 'REMOVER_GRUPO': {
+      const grupoId = payload.grupoId as string;
+      await storeGrupoRemove(grupoId);
+      grupos = grupos.filter(g => g.id !== grupoId);
       return NextResponse.json({ sala, grupos });
     }
 

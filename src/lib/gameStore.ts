@@ -53,6 +53,15 @@ class GameStore {
     }
   }
 
+  removeGrupo(grupoId: string): void {
+    for (const [salaId, gs] of this.grupos.entries()) {
+      if (gs.some((g) => g.id === grupoId)) {
+        this.setGrupos(salaId, gs.filter((g) => g.id !== grupoId));
+        return;
+      }
+    }
+  }
+
   subscribe(codigo: string, cb: Listener): () => void {
     if (!this.listeners.has(codigo)) this.listeners.set(codigo, new Set());
     this.listeners.get(codigo)!.add(cb);

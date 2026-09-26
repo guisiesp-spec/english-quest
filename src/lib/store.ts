@@ -69,3 +69,12 @@ export async function storeGrupoUpdate(
   }
   await sb().from('grupos').update(updates).eq('id', grupoId);
 }
+
+export async function storeGrupoRemove(grupoId: string): Promise<void> {
+  if (!isOnline()) {
+    const { gameStore } = await import('./gameStore');
+    gameStore.removeGrupo(grupoId);
+    return;
+  }
+  await sb().from('grupos').delete().eq('id', grupoId);
+}

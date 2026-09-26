@@ -22,6 +22,7 @@ export interface JogoActions {
   responder(grupoId: string, resposta: string, correto: boolean): Promise<void>;
   avancarTurno(): Promise<void>;
   ajustarPosicao(grupoId: string, delta: number): Promise<void>;
+  removerGrupo(grupoId: string): Promise<void>;
   pausar(): Promise<void>;
   encerrarJogo(): Promise<void>;
 }
@@ -108,10 +109,11 @@ export function useJogo(codigo: string | undefined): JogoState & JogoActions {
   const ajustarPosicao = useCallback(async (grupoId: string, delta: number) => {
     await post('AJUSTAR_POSICAO', { grupoId, delta });
   }, [codigo]);
+  const removerGrupo = useCallback(async (grupoId: string) => { await post('REMOVER_GRUPO', { grupoId }); }, [codigo]);
   const pausar = useCallback(async () => { await post('PAUSAR'); }, [codigo]);
   const encerrarJogo = useCallback(async () => { await post('ENCERRAR_JOGO'); }, [codigo]);
 
-  return { sala, grupos, carregando, erro, entrarNaSala, iniciarJogo, rolarDado, responder, avancarTurno, ajustarPosicao, pausar, encerrarJogo };
+  return { sala, grupos, carregando, erro, entrarNaSala, iniciarJogo, rolarDado, responder, avancarTurno, ajustarPosicao, removerGrupo, pausar, encerrarJogo };
 }
 
 // Lazy-load Supabase to avoid import errors in local mode

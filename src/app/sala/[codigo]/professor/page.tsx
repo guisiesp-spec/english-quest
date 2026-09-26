@@ -8,7 +8,7 @@ import MinigameRenderer from '@/components/MinigameRenderer';
 
 export default function ProfessorPage({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
-  const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, pausar, encerrarJogo } = useJogo(codigo);
+  const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, removerGrupo, pausar, encerrarJogo } = useJogo(codigo);
   const [showQR, setShowQR] = useState(false);
   const [salaURL, setSalaURL] = useState('');
   const [ip, setIp] = useState('');
@@ -370,6 +370,13 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
                         className="w-7 h-7 rounded-lg font-black text-sm bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all active:scale-95">
                         +
                       </button>
+                      {sala.status === 'aguardando' && (
+                        <button onClick={() => removerGrupo(g.id)}
+                          className="w-7 h-7 rounded-lg font-black text-sm bg-red-500/10 hover:bg-red-500/30 text-red-400 border border-red-500/20 transition-all active:scale-95"
+                          title="Remover equipe">
+                          🗑
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
