@@ -176,6 +176,12 @@ export async function POST(
       return NextResponse.json({ sala, grupos });
     }
 
+    case 'ENCERRAR_JOGO': {
+      sala = { ...sala, status: 'finalizado', fase: 'fim' };
+      await storeSalaSave(sala);
+      return NextResponse.json({ sala, grupos });
+    }
+
     default:
       return NextResponse.json({ erro: `Ação desconhecida: ${action}` }, { status: 400 });
   }

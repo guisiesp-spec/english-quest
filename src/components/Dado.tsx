@@ -78,12 +78,12 @@ export default function Dado({ onRolar, disabled, categoriaForçada }: Props) {
   const config = resultado ? DADO_CONFIG.find(d => d.categoria === resultado) : null;
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="flex flex-col items-center gap-8">
       <button
         onClick={rolar}
         disabled={disabled || rolling}
         className={`cursor-pointer select-none ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-        style={{ background: 'none', border: 'none', padding: 0 }}
+        style={{ background: 'none', border: 'none', padding: '0 0 24px 0' }}
         aria-label="Rolar dado"
       >
         <div className="dice-scene" style={{ filter: config ? `drop-shadow(0 0 20px ${config.cor}88)` : 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}>

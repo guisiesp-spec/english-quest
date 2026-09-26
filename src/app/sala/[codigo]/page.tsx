@@ -540,38 +540,66 @@ function AguardandoOverlay({ codigo, grupos, meuGrupoId, cor }: {
 
 // ── Fim de jogo ───────────────────────────────────────────────────────────────
 function FimDeJogo({ grupos, meuGrupoId }: { grupos: Grupo[]; meuGrupoId: string | null }) {
-  const sorted = [...grupos].sort((a, b) => b.posicao - a.posicao);
-  const meuIdx = sorted.findIndex(g => g.id === meuGrupoId);
-  const MEDALS = ['🥇', '🥈', '🥉'];
+  const sorted  = [...grupos].sort((a, b) => b.posicao - a.posicao);
+  const winner  = sorted[0];
+  const rest    = sorted.slice(1);
+  const meuIdx  = sorted.findIndex(g => g.id === meuGrupoId);
+  const souVencedor = meuIdx === 0;
 
   return (
-    <div className="rounded-3xl p-6 border animate-pop-in" style={{ backgroundColor: '#161B22', borderColor: BORDER }}>
-      <div className="text-center mb-5">
-        <span className="text-5xl">🏆</span>
-        <h2 className="font-black text-white text-2xl mt-2">Fim de jogo!</h2>
+    <div className="rounded-3xl border overflow-hidden animate-pop-in" style={{ backgroundColor: '#161B22', borderColor: BORDER }}>
+
+      {/* Winner banner */}
+      <div
+        className="px-6 pt-7 pb-6 flex flex-col items-center gap-2 text-center"
+        style={{ background: `linear-gradient(160deg, ${winner?.cor}22 0%, transparent 70%)` }}
+      >
+        <span className="text-5xl mb-1">🏆</span>
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>Grande vencedor</p>
+        <p className="font-black text-4xl leading-tight" style={{ color: winner?.cor }}>
+          {winner?.emoji} {winner?.nome}
+        </p>
+        <p className="text-white font-bold text-sm">
+          Casa <span style={{ color: winner?.cor }}>{winner?.posicao}</span> de 50
+        </p>
         {meuGrupoId && (
-          <p className="mt-1" style={{ color: MUTED }}>
-            {meuIdx === 0 ? '🎉 Vocês venceram!' : `Vocês ficaram em ${meuIdx + 1}º lugar`}
-          </p>
+          <div
+            className="mt-2 px-4 py-1.5 rounded-full text-sm font-bold border"
+            style={souVencedor
+              ? { backgroundColor: winner?.cor + '22', borderColor: winner?.cor + '55', color: winner?.cor }
+              : { backgroundColor: '#21262D', borderColor: BORDER, color: MUTED }}
+          >
+            {souVencedor ? '🎉 Você venceu!' : `Você ficou em ${meuIdx + 1}º lugar`}
+          </div>
         )}
       </div>
-      <div className="flex flex-col gap-2">
-        {sorted.map((g, i) => (
-          <div
-            key={g.id}
-            className="flex items-center gap-3 rounded-xl px-4 py-3 border"
-            style={{
-              backgroundColor: g.id === meuGrupoId ? g.cor + '18' : 'transparent',
-              borderColor:     g.id === meuGrupoId ? g.cor + '55' : BORDER,
-            }}
-          >
-            <span className="text-xl w-7">{MEDALS[i] ?? `${i + 1}.`}</span>
-            <span className="text-xl">{g.emoji}</span>
-            <span className="font-bold flex-1" style={{ color: g.cor }}>{g.nome}</span>
-            <span className="text-sm font-bold" style={{ color: MUTED }}>Casa {g.posicao}</span>
-          </div>
-        ))}
-      </div>
+
+      {/* Other teams */}
+      {rest.length > 0 && (
+        <div className="px-4 pb-5 flex flex-col gap-2" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <p className="text-xs font-semibold uppercase tracking-widest pt-4 pb-1" style={{ color: MUTED }}>Classificação</p>
+          {rest.map((g, i) => {
+            const pos  = i + 2;
+            const MEDALS: Record<number, string> = { 2: '🥈', 3: '🥉' };
+            const isMe = g.id === meuGrupoId;
+            return (
+              <div
+                key={g.id}
+                className="flex items-center gap-3 rounded-xl px-4 py-3 border"
+                style={{
+                  backgroundColor: isMe ? g.cor + '15' : '#0D111799',
+                  borderColor:     isMe ? g.cor + '44' : BORDER,
+                }}
+              >
+                <span className="text-lg w-7 text-center">{MEDALS[pos] ?? `${pos}º`}</span>
+                <span className="text-lg">{g.emoji}</span>
+                <span className="font-bold flex-1 text-sm" style={{ color: g.cor }}>{g.nome}</span>
+                <span className="text-xs font-bold" style={{ color: MUTED }}>Casa {g.posicao}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

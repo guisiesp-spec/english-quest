@@ -7,11 +7,12 @@ import MapaModal from '@/components/MapaModal';
 
 export default function ProfessorPage({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
-  const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, pausar } = useJogo(codigo);
+  const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, pausar, encerrarJogo } = useJogo(codigo);
   const [showQR, setShowQR] = useState(false);
   const [mapaAberto, setMapaAberto] = useState(false);
   const [salaURL, setSalaURL] = useState('');
   const [ip, setIp] = useState('');
+  const [confirmEncerrar, setConfirmEncerrar] = useState(false);
 
   useEffect(() => {
     const origin = window.location.origin;
@@ -56,6 +57,33 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
     <>
       {mapaAberto && (
         <MapaModal grupos={grupos} grupoAtual={sala.turno_grupo_id} meuGrupoId={null} onFechar={() => setMapaAberto(false)} />
+      )}
+
+      {/* Confirmação encerrar */}
+      {confirmEncerrar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+          <div className="bg-[#161B22] border border-red-500/30 rounded-3xl p-6 w-full max-w-sm text-center flex flex-col gap-4">
+            <span className="text-4xl">🏁</span>
+            <h2 className="text-white font-black text-xl">Encerrar o jogo?</h2>
+            <p className="text-[#7D8590] text-sm leading-relaxed">
+              O jogo será finalizado agora e o ranking será exibido para todos os grupos com base nas posições atuais no tabuleiro.
+            </p>
+            <div className="flex gap-3 mt-1">
+              <button
+                onClick={() => setConfirmEncerrar(false)}
+                className="flex-1 py-3 rounded-xl font-bold text-sm bg-[#21262D] text-[#7D8590] hover:text-white transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => { setConfirmEncerrar(false); await encerrarJogo(); }}
+                className="flex-1 py-3 rounded-xl font-black text-sm bg-red-600 hover:bg-red-500 text-white transition-all active:scale-[.97]"
+              >
+                Encerrar agora
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <main className="min-h-screen bg-[#0D1117] pb-10">
@@ -159,13 +187,23 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
                       className="bg-violet-600 hover:bg-violet-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
                       ⏩ Skip
                     </button>
+                    <button onClick={() => setConfirmEncerrar(true)}
+                      className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
+                      🏁 Encerrar
+                    </button>
                   </>
                 )}
                 {sala.status === 'jogando' && sala.pausado && (
-                  <button onClick={pausar}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
-                    ▶ Retomar
-                  </button>
+                  <>
+                    <button onClick={pausar}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
+                      ▶ Retomar
+                    </button>
+                    <button onClick={() => setConfirmEncerrar(true)}
+                      className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
+                      🏁 Encerrar
+                    </button>
+                  </>
                 )}
               </div>
             </div>
