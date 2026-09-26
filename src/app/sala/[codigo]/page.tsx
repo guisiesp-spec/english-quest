@@ -245,12 +245,9 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
 
       {/* ── WAITING STATE ── */}
       {sala.status === 'aguardando' && (
-        <div
-          className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-10"
-          style={{ background: 'linear-gradient(to top, rgba(13,17,23,0.97) 65%, transparent)' }}
-        >
+        <Overlay>
           <AguardandoOverlay codigo={codigo} grupos={grupos} meuGrupoId={meuGrupoId} cor={cor} />
-        </div>
+        </Overlay>
       )}
 
       {/* ── POPUPS (overlay + blur) ── */}
