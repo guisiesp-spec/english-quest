@@ -186,6 +186,31 @@ export async function POST(
       const grupoId = payload.grupoId as string;
       await storeGrupoRemove(grupoId);
       grupos = grupos.filter(g => g.id !== grupoId);
+
+      if (sala.status === 'jogando') {
+        const novaOrdem = sala.ordem_turnos.filter(id => id !== grupoId);
+        if (novaOrdem.length === 0) {
+          sala = { ...sala, ordem_turnos: novaOrdem, status: 'finalizado', fase: 'fim' };
+        } else {
+          const eraVezDele = sala.turno_grupo_id === grupoId;
+          const oldIdx = sala.ordem_turnos.indexOf(grupoId);
+          let novoIndice = sala.indice_turno_atual;
+          if (oldIdx < novoIndice) novoIndice = Math.max(0, novoIndice - 1);
+          novoIndice = novoIndice % novaOrdem.length;
+          sala = {
+            ...sala,
+            ordem_turnos: novaOrdem,
+            indice_turno_atual: novoIndice,
+            turno_grupo_id: eraVezDele ? novaOrdem[novoIndice] : sala.turno_grupo_id,
+            fase: eraVezDele ? 'dado' : sala.fase,
+            pergunta_atual: eraVezDele ? null : sala.pergunta_atual,
+            categoria_atual: eraVezDele ? null : sala.categoria_atual,
+            resultado_atual: eraVezDele ? null : sala.resultado_atual,
+          };
+        }
+        await storeSalaSave(sala);
+      }
+
       return NextResponse.json({ sala, grupos });
     }
 
