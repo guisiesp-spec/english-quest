@@ -1,171 +1,231 @@
 'use client';
-import { use } from 'react';
-import { useJogo } from '@/hooks/useJogo';
-import MinigameRenderer from '@/components/MinigameRenderer';
-import MapaPath from '@/components/MapaPath';
+import { use, useEffect, useRef } from 'react';
 import type { Pergunta } from '@/lib/tipos';
+import { useJogo } from '@/hooks/useJogo';
 import { DADO_CONFIG } from '@/lib/constantes';
+import MinigameRenderer from '@/components/MinigameRenderer';
+import MapaPath, { nodePos, MAPA_W, MAPA_H } from '@/components/MapaPath';
 
 export default function EspectadorPage({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
   const { sala, grupos, carregando, erro } = useJogo(codigo);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const prevTurnoRef = useRef<string | null>(null);
+
+  // Auto-scroll to current group's position when turn changes
+  useEffect(() => {
+    if (!sala || sala.turno_grupo_id === prevTurnoRef.current) return;
+    prevTurnoRef.current = sala.turno_grupo_id;
+    const grupo = grupos.find(g => g.id === sala.turno_grupo_id);
+    if (!grupo || !boardRef.current) return;
+    const { y } = nodePos(Math.max(1, grupo.posicao));
+    const containerW = boardRef.current.clientWidth;
+    const containerH = boardRef.current.clientHeight;
+    const scale = containerW / MAPA_W;
+    boardRef.current.scrollTo({ top: Math.max(0, y * scale - containerH * 0.45), behavior: 'smooth' });
+  }, [sala?.turno_grupo_id, grupos]);
 
   if (carregando) return (
     <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
-      <span className="text-[#7D8590] animate-pulse">Carregando...</span>
+      <span className="text-[#7D8590] text-sm animate-pulse">Conectando…</span>
     </div>
   );
   if (erro || !sala) return (
-    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center gap-3 p-6">
-      <p className="text-red-400 font-bold">{erro ?? 'Sala não encontrada.'}</p>
-      <a href="/" className="text-[#7D8590] underline text-sm">← Voltar</a>
+    <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
+      <p className="text-red-400">{erro ?? 'Sala não encontrada.'}</p>
     </div>
   );
 
-  const grupoAtual    = grupos.find(g => g.id === sala.turno_grupo_id);
-  const configCat     = sala.categoria_atual ? DADO_CONFIG.find(d => d.categoria === sala.categoria_atual) : null;
-  const sorted        = [...grupos].sort((a, b) => b.posicao - a.posicao);
-  const MEDALS        = ['🥇', '🥈', '🥉'];
+  const grupoAtual = grupos.find(g => g.id === sala.turno_grupo_id);
+  const configCat  = sala.categoria_atual ? DADO_CONFIG.find(d => d.categoria === sala.categoria_atual) : null;
 
   return (
-    <main className="min-h-screen bg-[#0D1117] pb-12">
+    <div className="relative h-screen w-full overflow-hidden" style={{ backgroundColor: '#0D1117' }}>
 
-      {/* ── HEADER ── */}
-      <div className="border-b border-[#21262D] px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🎮</span>
-          <div>
-            <h1 className="font-black text-white text-lg leading-tight">English Quest</h1>
-            <p className="text-[#7D8590] text-xs">Modo telão</p>
+      {/* Board */}
+      <div ref={boardRef} className="absolute inset-0 overflow-y-auto scrollbar-none">
+        <div style={{ position: 'relative', maxWidth: MAPA_W, margin: '0 auto' }}>
+          <MapaPath grupos={grupos} grupoAtual={sala.turno_grupo_id} />
+
+          {/* Pawns */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+            {grupos.map(g => {
+              const pos = Math.max(1, g.posicao);
+              const { x, y } = nodePos(pos);
+              const aqui   = grupos.filter(h => Math.max(1, h.posicao) === pos);
+              const myIdx  = aqui.findIndex(h => h.id === g.id);
+              const offsetX = aqui.length === 1 ? 0 : (myIdx % 2 === 0 ? -12 : 12);
+              const stackY  = Math.floor(myIdx / 2) * -6;
+              const isActive = g.id === sala.turno_grupo_id;
+
+              return (
+                <div key={g.id} style={{
+                  position: 'absolute',
+                  left: `${(x / MAPA_W) * 100}%`,
+                  top:  `${(y / MAPA_H) * 100}%`,
+                  transform: `translate(calc(-50% + ${offsetX}px), calc(-83% + ${stackY}px))`,
+                  transition: 'left 1s cubic-bezier(0.34,1.56,0.64,1), top 1s cubic-bezier(0.34,1.56,0.64,1)',
+                  zIndex: isActive ? 2 : 1,
+                  filter: isActive ? `drop-shadow(0 0 10px ${g.cor})` : `drop-shadow(0 2px 4px rgba(0,0,0,0.5))`,
+                }}>
+                  <svg width={isActive ? 32 : 26} height={isActive ? 48 : 39} viewBox="0 0 40 60">
+                    <ellipse cx="20" cy="57" rx="13" ry="3.5" fill="rgba(0,0,0,0.45)" />
+                    <ellipse cx="20" cy="50" rx="14" ry="5" fill={g.cor} />
+                    <path d="M14 22 Q7 36 5 50 L35 50 Q33 36 26 22 Z" fill={g.cor} />
+                    <rect x="17" y="16" width="6" height="8" rx="3" fill={g.cor} />
+                    <circle cx="20" cy="9" r="9" fill={g.cor} />
+                    <circle cx="20" cy="9" r="9" fill="none" stroke="rgba(255,255,255,0.32)" strokeWidth="1.5" />
+                    <circle cx="13" cy="5" r="4" fill="white" opacity="0.22" />
+                    {isActive && <circle cx="20" cy="9" r="13" fill="none" stroke="#FCD34D" strokeWidth="3" />}
+                  </svg>
+                </div>
+              );
+            })}
           </div>
         </div>
-        <span className="font-mono font-black text-amber-400 text-2xl tracking-[.25em]">{codigo}</span>
       </div>
 
-      <div className="p-5 max-w-2xl mx-auto flex flex-col gap-5">
-
-        {/* ── PLACAR ── */}
-        <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-5">
-          <p className="text-[#7D8590] text-xs font-semibold uppercase tracking-widest mb-4">Placar</p>
-          <div className="flex flex-col gap-3">
-            {sorted.map((g, i) => (
-              <div key={g.id} className="flex items-center gap-3">
-                <span className="text-xl w-7 text-center flex-shrink-0">{MEDALS[i] ?? `${i+1}.`}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg">{g.emoji}</span>
-                    <span className="font-bold text-sm truncate" style={{ color: g.cor }}>{g.nome}</span>
-                    {g.id === sala.turno_grupo_id && (
-                      <span
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse flex-shrink-0"
-                        style={{ backgroundColor: g.cor + '33', color: g.cor }}
-                      >
-                        ▶ jogando
-                      </span>
-                    )}
-                  </div>
-                  <div className="h-2 bg-[#21262D] rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${(g.posicao / 50) * 100}%`, backgroundColor: g.cor }}
-                    />
-                  </div>
-                </div>
-                <span className="text-white font-bold text-sm flex-shrink-0">{g.posicao}<span className="text-[#7D8590] font-normal">/50</span></span>
+      {/* Fixed header */}
+      <header className="absolute top-0 left-0 right-0 z-20 border-b border-[#21262D]"
+        style={{ background: 'rgba(13,17,23,0.9)', backdropFilter: 'blur(12px)' }}>
+        <div className="px-4 pt-10 pb-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[#7D8590] text-xs font-semibold">👁 ESPECTADOR — {codigo}</p>
+            {grupoAtual && (
+              <p className="font-black text-base mt-0.5" style={{ color: grupoAtual.cor }}>
+                {grupoAtual.emoji} {grupoAtual.nome}
+              </p>
+            )}
+          </div>
+          {/* Score strip */}
+          <div className="flex gap-1.5 flex-wrap justify-end max-w-[55%]">
+            {[...grupos].sort((a, b) => b.posicao - a.posicao).map(g => (
+              <div key={g.id}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border"
+                style={{
+                  backgroundColor: g.cor + '18',
+                  borderColor: g.id === sala.turno_grupo_id ? g.cor : g.cor + '44',
+                  color: g.cor,
+                }}>
+                <span>{g.emoji}</span>
+                <span>{g.posicao}</span>
               </div>
             ))}
           </div>
         </div>
+      </header>
 
-        {/* ── ESTADO DO JOGO ── */}
-        {sala.status === 'jogando' && (
-          <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-5 flex flex-col gap-4">
+      {/* Waiting */}
+      {sala.status === 'aguardando' && (
+        <Overlay>
+          <div className="text-center flex flex-col items-center gap-3">
+            <span className="text-5xl">⏳</span>
+            <p className="text-white font-black text-xl">Aguardando início</p>
+            <p className="text-[#7D8590] text-sm">O professor vai iniciar o jogo em breve</p>
+          </div>
+        </Overlay>
+      )}
 
-            {/* Quem joga */}
-            {grupoAtual && (
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl border-2"
-                  style={{ backgroundColor: grupoAtual.cor + '22', borderColor: grupoAtual.cor + '66' }}
-                >
-                  {grupoAtual.emoji}
-                </div>
-                <div>
-                  <p className="font-black text-white">{grupoAtual.nome}</p>
-                  <p className="text-[#7D8590] text-xs">está jogando</p>
-                </div>
-                {configCat && (
-                  <span
-                    className="ml-auto text-xs font-bold px-3 py-1.5 rounded-full"
-                    style={{ backgroundColor: configCat.corBg, color: configCat.cor }}
-                  >
-                    {configCat.emoji} {configCat.label}
+      {/* Minigame (readonly) */}
+      {sala.status === 'jogando' && sala.fase === 'minigame' && sala.pergunta_atual && (
+        <Overlay>
+          <div className="flex flex-col gap-3 w-full animate-pop-in">
+            {configCat && grupoAtual && (
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border"
+                style={{ backgroundColor: configCat.corBg + '33', color: configCat.cor, borderColor: configCat.cor + '44' }}>
+                <span>{configCat.emoji}</span>
+                <span>{configCat.label}</span>
+                <span className="ml-auto font-black" style={{ color: grupoAtual.cor }}>
+                  {grupoAtual.emoji} {grupoAtual.nome}
+                </span>
+              </div>
+            )}
+            <MinigameRenderer
+              pergunta={sala.pergunta_atual as Pergunta}
+              onResponder={() => {}}
+              readonly
+            />
+          </div>
+        </Overlay>
+      )}
+
+      {/* Resultado */}
+      {sala.status === 'jogando' && sala.fase === 'resultado' && sala.resultado_atual && grupoAtual && (
+        <Overlay>
+          <div className={`rounded-3xl p-6 text-center border flex flex-col items-center gap-3 animate-pop-in ${
+            sala.resultado_atual.correto
+              ? 'bg-emerald-500/10 border-emerald-500/30'
+              : sala.resultado_atual.resposta_dada === '__timeout__'
+              ? 'bg-amber-500/10 border-amber-500/30'
+              : 'bg-red-500/10 border-red-500/30'
+          }`}>
+            <span className="text-5xl">
+              {sala.resultado_atual.correto ? '🎉' : sala.resultado_atual.resposta_dada === '__timeout__' ? '⏰' : '😬'}
+            </span>
+            <p className={`text-xl font-black ${
+              sala.resultado_atual.correto ? 'text-emerald-400'
+              : sala.resultado_atual.resposta_dada === '__timeout__' ? 'text-amber-400'
+              : 'text-red-400'
+            }`}>
+              {sala.resultado_atual.correto ? 'Acertou!' : sala.resultado_atual.resposta_dada === '__timeout__' ? 'Tempo esgotado!' : 'Errou!'}
+              <span className="text-base font-normal opacity-60 ml-2">({grupoAtual.nome})</span>
+            </p>
+            {sala.resultado_atual.correto && (
+              <p className="text-white font-bold text-lg">+{sala.resultado_atual.casas_avancadas} casas 🚀</p>
+            )}
+            {!sala.resultado_atual.correto && sala.resultado_atual.resposta_correta && (
+              <p className="text-sm text-[#7D8590]">
+                Certo: <strong className="text-white">{String(sala.resultado_atual.resposta_correta)}</strong>
+              </p>
+            )}
+          </div>
+        </Overlay>
+      )}
+
+      {/* Fim de jogo */}
+      {sala.status === 'finalizado' && (
+        <Overlay>
+          <div className="rounded-3xl border overflow-hidden animate-pop-in" style={{ backgroundColor: '#161B22', borderColor: '#21262D' }}>
+            <div className="px-6 pt-7 pb-5 flex flex-col items-center gap-2 text-center">
+              <span className="text-5xl mb-1">🏆</span>
+              {(() => {
+                const winner = [...grupos].sort((a, b) => b.posicao - a.posicao)[0];
+                return winner ? (
+                  <>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#7D8590]">Grande vencedor</p>
+                    <p className="font-black text-4xl leading-tight" style={{ color: winner.cor }}>
+                      {winner.emoji} {winner.nome}
+                    </p>
+                    <p className="text-white text-sm">Casa {winner.posicao}</p>
+                  </>
+                ) : null;
+              })()}
+            </div>
+            <div className="px-4 pb-5 flex flex-col gap-2 border-t border-[#21262D]">
+              {[...grupos].sort((a, b) => b.posicao - a.posicao).map((g, i) => (
+                <div key={g.id} className="flex items-center gap-3 rounded-xl px-4 py-3 border"
+                  style={{ backgroundColor: '#0D111799', borderColor: '#21262D' }}>
+                  <span className="text-lg w-7 text-center">
+                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}º`}
                   </span>
-                )}
-              </div>
-            )}
-
-            {sala.fase === 'dado' && (
-              <p className="text-[#7D8590] text-sm animate-pulse text-center py-2">
-                ⏳ Aguardando o dado...
-              </p>
-            )}
-
-            {sala.fase === 'minigame' && sala.pergunta_atual && (
-              <MinigameRenderer
-                pergunta={sala.pergunta_atual as Pergunta}
-                onResponder={() => {}}
-                readonly
-              />
-            )}
-
-            {sala.fase === 'resultado' && sala.resultado_atual && (
-              <div className={`rounded-2xl p-5 text-center border ${sala.resultado_atual.correto ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
-                <div className="text-5xl mb-2">{sala.resultado_atual.correto ? '🎉' : '😬'}</div>
-                <h3 className={`text-2xl font-black ${sala.resultado_atual.correto ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {sala.resultado_atual.correto ? 'ACERTOU!' : 'ERROU!'}
-                </h3>
-                <p className="text-white font-bold mt-1">
-                  {sala.resultado_atual.correto
-                    ? `+${sala.resultado_atual.casas_avancadas} casas 🚀`
-                    : `Certo: ${String(sala.resultado_atual.resposta_correta)}`}
-                </p>
-              </div>
-            )}
+                  <span className="text-lg">{g.emoji}</span>
+                  <span className="font-bold flex-1 text-sm" style={{ color: g.cor }}>{g.nome}</span>
+                  <span className="text-xs font-bold text-[#7D8590]">Casa {g.posicao}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+        </Overlay>
+      )}
+    </div>
+  );
+}
 
-        {/* ── AGUARDANDO ── */}
-        {sala.status === 'aguardando' && (
-          <div className="flex flex-col items-center gap-3 py-8">
-            <span className="text-4xl animate-bounce">⏳</span>
-            <p className="text-[#7D8590]">Aguardando o professor iniciar o jogo...</p>
-            <p className="text-[#30363D] text-sm">{grupos.length} grupo(s) na sala</p>
-          </div>
-        )}
-
-        {/* ── FIM ── */}
-        {sala.status === 'finalizado' && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center flex flex-col items-center gap-3">
-            <span className="text-5xl">🏆</span>
-            <h2 className="font-black text-white text-2xl">Fim de jogo!</h2>
-            {sorted[0] && (
-              <p className="font-bold" style={{ color: sorted[0].cor }}>
-                {sorted[0].emoji} {sorted[0].nome} venceu!
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* ── MAPA ── */}
-        <div className="bg-[#161B22] border border-[#21262D] rounded-2xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#21262D]">
-            <p className="text-[#7D8590] text-xs font-semibold uppercase tracking-widest">Mapa</p>
-          </div>
-          <MapaPath grupos={grupos} grupoAtual={sala.turno_grupo_id} />
-        </div>
-
-      </div>
-    </main>
+function Overlay({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="absolute inset-0 z-30 flex items-center justify-center p-4"
+      style={{ backdropFilter: 'blur(10px)', background: 'rgba(13,17,23,0.72)' }}>
+      <div className="w-full max-w-sm">{children}</div>
+    </div>
   );
 }

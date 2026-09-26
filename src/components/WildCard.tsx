@@ -6,7 +6,7 @@ interface Props {
   onEscolher: (categoria: CategoriasDado) => void;
 }
 
-const OPCOES: CategoriasDado[] = ['grammar', 'vocabulary', 'time_place'];
+const OPCOES: CategoriasDado[] = ['grammar', 'vocabulary', 'time_place', 'challenge'];
 
 export default function WildCard({ onEscolher }: Props) {
   return (

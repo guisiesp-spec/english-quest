@@ -1,6 +1,7 @@
 'use client';
 import { use, useState, useEffect } from 'react';
 import { useJogo } from '@/hooks/useJogo';
+import type { Pergunta, PerguntaMultiplaEscolha, PerguntaVF, PerguntaLigar } from '@/lib/tipos';
 import Tabuleiro from '@/components/Tabuleiro';
 import QRCode from '@/components/QRCode';
 import MapaModal from '@/components/MapaModal';
@@ -130,12 +131,25 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
 
         {/* ── QR PANEL ── */}
         {showQR && salaURL && (
-          <div className="border-b border-[#21262D] bg-[#161B22] px-5 py-6 flex flex-col items-center gap-4">
-            <p className="text-[#7D8590] text-sm">Mostre este QR para os grupos entrarem:</p>
-            <div className="bg-white p-3 rounded-2xl shadow-2xl">
-              <QRCode value={salaURL} size={180} />
+          <div className="border-b border-[#21262D] bg-[#161B22] px-5 py-6 flex flex-col items-center gap-6">
+            {/* Player QR */}
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-[#7D8590] text-sm font-semibold">🎮 Grupos entram aqui:</p>
+              <div className="bg-white p-3 rounded-2xl shadow-2xl">
+                <QRCode value={salaURL} size={160} />
+              </div>
+              <p className="font-mono text-amber-400 font-bold text-sm break-all text-center">{salaURL}</p>
             </div>
-            <p className="font-mono text-amber-400 font-bold text-sm break-all text-center">{salaURL}</p>
+
+            {/* Spectator QR */}
+            <div className="flex flex-col items-center gap-3 border-t border-[#30363D] pt-5 w-full">
+              <p className="text-[#7D8590] text-sm font-semibold">👁 Espectadores assistem aqui:</p>
+              <div className="bg-white p-3 rounded-2xl shadow-2xl">
+                <QRCode value={`${salaURL}/espectador`} size={140} />
+              </div>
+              <p className="font-mono text-violet-400 font-bold text-xs break-all text-center">{salaURL}/espectador</p>
+            </div>
+
             {ip && (
               <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 text-center text-sm">
                 <p className="text-violet-300 text-xs">
@@ -215,10 +229,12 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
             )}
           </div>
 
-          {/* ── LIBERAR PRÓXIMA PERGUNTA ── */}
+          {/* ── LIBERAR PRÓXIMA PERGUNTA + GABARITO PROFESSOR ── */}
           {sala.status === 'jogando' && sala.fase === 'resultado' && sala.resultado_atual && !sala.resultado_atual.correto && (
-            <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-5 flex flex-col gap-4">
+
+              {/* Header */}
+              <div className="flex items-center gap-2">
                 <span className="text-xl">{sala.resultado_atual.resposta_dada === '__timeout__' ? '⏰' : '😬'}</span>
                 <div>
                   <p className="text-amber-300 font-bold text-sm">
@@ -229,6 +245,71 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
                   )}
                 </div>
               </div>
+
+              {/* Question details for professor */}
+              {sala.pergunta_atual && (() => {
+                const p = sala.pergunta_atual as Pergunta;
+                const dada    = sala.resultado_atual?.resposta_dada;
+                const correta = sala.resultado_atual?.resposta_correta;
+                const isTimeout = dada === '__timeout__' || dada === '__max_erros__';
+
+                return (
+                  <div className="bg-[#0D1117] rounded-xl p-4 flex flex-col gap-3 border border-amber-500/20">
+                    <p className="text-white text-sm font-bold leading-snug">{p.enunciado}</p>
+
+                    {p.tipo !== 'ligar' && (
+                      <div className="flex flex-col gap-1.5">
+                        {!isTimeout && dada && (
+                          <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/30">
+                            <span className="text-red-400 text-xs font-black shrink-0 mt-0.5">✗ Marcou</span>
+                            <span className="text-white text-xs">{dada}</span>
+                          </div>
+                        )}
+                        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30">
+                          <span className="text-emerald-400 text-xs font-black shrink-0 mt-0.5">✓ Correto</span>
+                          <span className="text-white text-xs font-bold">{String(correta)}</span>
+                        </div>
+                        {p.tipo === 'verdadeiro_falso' && (p as PerguntaVF).explicacao && (
+                          <p className="text-blue-400 text-xs mt-1">💡 {(p as PerguntaVF).explicacao}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {p.tipo === 'ligar' && (
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-amber-400/60 text-xs font-semibold">Gabarito:</p>
+                        {(p as PerguntaLigar).pares.map((par, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs">
+                            <span className="text-[#7D8590] bg-[#21262D] px-2 py-1 rounded flex-1 text-center">{par.esquerda}</span>
+                            <span className="text-emerald-400 font-bold">→</span>
+                            <span className="text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded flex-1 text-center">{par.direita}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {p.tipo === 'multipla_escolha' && (
+                      <div className="flex flex-col gap-1">
+                        {(p as PerguntaMultiplaEscolha).opcoes.map(op => {
+                          const isCerta  = op === (p as PerguntaMultiplaEscolha).resposta;
+                          const isMarcou = op === dada;
+                          if (!isCerta && !isMarcou) return null;
+                          return (
+                            <div key={op} className={`flex items-center gap-2 px-2 py-1 rounded text-xs ${
+                              isCerta ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300' : 'bg-red-500/15 border border-red-500/30 text-red-300'
+                            }`}>
+                              <span className="font-black">{isCerta ? '✓' : '✗'}</span>
+                              <span>{op}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Release button */}
               <button
                 onClick={avancarTurno}
                 className="w-full bg-amber-500 hover:bg-amber-400 active:scale-[.97] text-black font-black py-3 rounded-xl text-sm transition-all"

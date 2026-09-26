@@ -3,12 +3,22 @@ import type { CasaEspecial, ConfigDado, TipoCasa } from './tipos';
 export const TOTAL_CASAS = 300;
 
 export const GRUPOS_CONFIG = [
-  { nome: 'Grupo Vermelho', cor: '#ef4444', corTexto: '#ffffff', emoji: '🔴', id_slot: 0 },
-  { nome: 'Grupo Azul',     cor: '#3b82f6', corTexto: '#ffffff', emoji: '🔵', id_slot: 1 },
-  { nome: 'Grupo Verde',    cor: '#22c55e', corTexto: '#ffffff', emoji: '🟢', id_slot: 2 },
-  { nome: 'Grupo Amarelo',  cor: '#eab308', corTexto: '#000000', emoji: '🟡', id_slot: 3 },
-  { nome: 'Grupo Roxo',     cor: '#a855f7', corTexto: '#ffffff', emoji: '🟣', id_slot: 4 },
-  { nome: 'Grupo Laranja',  cor: '#f97316', corTexto: '#ffffff', emoji: '🟠', id_slot: 5 },
+  { nome: 'Grupo Vermelho',  cor: '#ef4444', corTexto: '#ffffff', emoji: '🔴', id_slot: 0  },
+  { nome: 'Grupo Azul',      cor: '#3b82f6', corTexto: '#ffffff', emoji: '🔵', id_slot: 1  },
+  { nome: 'Grupo Verde',     cor: '#22c55e', corTexto: '#ffffff', emoji: '🟢', id_slot: 2  },
+  { nome: 'Grupo Amarelo',   cor: '#eab308', corTexto: '#000000', emoji: '🟡', id_slot: 3  },
+  { nome: 'Grupo Roxo',      cor: '#a855f7', corTexto: '#ffffff', emoji: '🟣', id_slot: 4  },
+  { nome: 'Grupo Laranja',   cor: '#f97316', corTexto: '#ffffff', emoji: '🟠', id_slot: 5  },
+  { nome: 'Grupo Rosa',      cor: '#ec4899', corTexto: '#ffffff', emoji: '🩷', id_slot: 6  },
+  { nome: 'Grupo Ciano',     cor: '#06b6d4', corTexto: '#ffffff', emoji: '🩵', id_slot: 7  },
+  { nome: 'Grupo Marrom',    cor: '#92400e', corTexto: '#ffffff', emoji: '🟤', id_slot: 8  },
+  { nome: 'Grupo Cinza',     cor: '#6b7280', corTexto: '#ffffff', emoji: '⚫', id_slot: 9  },
+  { nome: 'Grupo Dourado',   cor: '#d97706', corTexto: '#ffffff', emoji: '⭐', id_slot: 10 },
+  { nome: 'Grupo Turquesa',  cor: '#0d9488', corTexto: '#ffffff', emoji: '💚', id_slot: 11 },
+  { nome: 'Grupo Índigo',    cor: '#6366f1', corTexto: '#ffffff', emoji: '💜', id_slot: 12 },
+  { nome: 'Grupo Lima',      cor: '#84cc16', corTexto: '#000000', emoji: '🟩', id_slot: 13 },
+  { nome: 'Grupo Coral',     cor: '#f43f5e', corTexto: '#ffffff', emoji: '🩸', id_slot: 14 },
+  { nome: 'Grupo Esmeralda', cor: '#10b981', corTexto: '#ffffff', emoji: '💎', id_slot: 15 },
 ];
 
 // No special squares — all positions are plain numbered nodes

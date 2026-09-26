@@ -57,7 +57,7 @@ export default function ProfessorNovaSala() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <p className="text-white text-sm font-bold">Número de grupos</p>
-              <p className="text-[#7D8590] text-xs mt-0.5">De 2 a 6 equipes</p>
+              <p className="text-[#7D8590] text-xs mt-0.5">De 2 a 16 equipes</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -68,7 +68,7 @@ export default function ProfessorNovaSala() {
               </button>
               <span className="text-white font-black text-2xl w-7 text-center">{numGrupos}</span>
               <button
-                onClick={() => setNumGrupos(n => Math.min(6, n + 1))}
+                onClick={() => setNumGrupos(n => Math.min(16, n + 1))}
                 className="w-9 h-9 rounded-xl bg-[#21262D] text-white font-black text-lg hover:bg-[#30363D] active:scale-95 transition-all"
               >
                 +

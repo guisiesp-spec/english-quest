@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function MultiplaEscolha({ pergunta, onResponder, readonly }: Props) {
+  const [opcoes] = useState(() => [...pergunta.opcoes].sort(() => Math.random() - 0.5));
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const [tempo, setTempo] = useState(TIMER_MULTIPLA_ESCOLHA);
   const [expirado, setExpirado] = useState(false);
@@ -79,7 +80,7 @@ export default function MultiplaEscolha({ pergunta, onResponder, readonly }: Pro
 
       {/* Options — Duolingo style: single column, 3D border effect */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {pergunta.opcoes.map(opcao => {
+        {opcoes.map(opcao => {
           const correto = opcao === pergunta.resposta;
           const estaErrado = respondido && opcao === selecionada && !correto;
           const estaCerto  = respondido && correto;

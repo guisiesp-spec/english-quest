@@ -508,11 +508,6 @@ function ResultadoPopup({
           +{resultado.casas_avancadas} casa{resultado.casas_avancadas !== 1 ? 's' : ''} 🚀
         </p>
       )}
-      {!ok && !isTimeout && resultado.resposta_correta && (
-        <p className="text-sm" style={{ color: MUTED }}>
-          Certo: <strong className="text-white">{String(resultado.resposta_correta)}</strong>
-        </p>
-      )}
       {!ok && !isTimeout && ehMeuTurno && (
         <p className="text-xs mt-1 animate-pulse" style={{ color: MUTED }}>
           Aguardando professor liberar próxima pergunta…

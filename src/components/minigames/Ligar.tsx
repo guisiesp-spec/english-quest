@@ -19,6 +19,7 @@ export default function Ligar({ pergunta, onResponder, readonly }: Props) {
   // usedSlots: which right-side slot indices are correctly connected
   const [usedSlots, setUsedSlots] = useState<Set<number>>(new Set());
   const [erradas, setErradas] = useState<string[]>([]);
+  const [numErros, setNumErros] = useState(0);
   const [tempo, setTempo] = useState(TIMER_LIGAR);
   const [finalizado, setFinalizado] = useState(false);
 
@@ -64,13 +65,19 @@ export default function Ligar({ pergunta, onResponder, readonly }: Props) {
 
     if (!correto) {
       const esqAtual = esqSel;
+      const novosErros = numErros + 1;
+      setNumErros(novosErros);
       setErradas((e) => [...e, esqAtual]);
       setTimeout(() => {
         setErradas((e) => e.filter((x) => x !== esqAtual));
         const sem = { ...novas };
         delete sem[esqAtual];
         setConexoes(sem);
-      }, 600);
+        if (novosErros >= 3) {
+          setFinalizado(true);
+          onResponder('__max_erros__', false);
+        }
+      }, 700);
     } else {
       setUsedSlots((s) => new Set(s).add(slotIdx));
     }
@@ -114,7 +121,12 @@ export default function Ligar({ pergunta, onResponder, readonly }: Props) {
       <div className="bg-white rounded-xl border border-slate-200 p-3 text-center">
         <p className="font-bold text-slate-700">{pergunta.enunciado}</p>
         {!finalizado && !readonly && (
-          <p className="text-xs text-slate-400 mt-1">Toque na esquerda, depois na direita para conectar</p>
+          <div className="flex items-center justify-center gap-3 mt-1">
+            <p className="text-xs text-slate-400">Toque na esquerda, depois na direita para conectar</p>
+            <span className="text-xs font-bold" style={{ color: numErros === 0 ? '#6b7280' : numErros === 1 ? '#f59e0b' : '#ef4444' }}>
+              ❌ {numErros}/3
+            </span>
+          </div>
         )}
       </div>
 
