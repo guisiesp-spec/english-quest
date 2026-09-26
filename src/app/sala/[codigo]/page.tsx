@@ -178,18 +178,15 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
               const pos  = Math.max(1, g.posicao);
               const { x, y } = nodePos(pos);
 
-              // Place pawn base just ABOVE the node circle
-              const nodeR   = 16; // matches NODE_R in MapaPath
-              const adjustedY = y - nodeR - 4; // 4px gap above node
-
               // Offset stacked pieces on the same square
               const aqui    = grupos.filter(h => Math.max(1, h.posicao) === pos);
               const myIdx   = aqui.findIndex(h => h.id === g.id);
               const offsetX = aqui.length === 1 ? 0 : (myIdx % 2 === 0 ? -12 : 12);
-              const stackY  = Math.floor(myIdx / 2) * -6; // stack upward if > 2
+              const stackY  = Math.floor(myIdx / 2) * -6;
 
+              // topPct = node center; transform -83% aligns pawn base disc to node center
               const leftPct = `${(x / MAPA_W) * 100}%`;
-              const topPct  = `${(adjustedY / MAPA_H) * 100}%`;
+              const topPct  = `${(y / MAPA_H) * 100}%`;
               const isActive = g.id === sala.turno_grupo_id;
               const isMine   = g.id === meuGrupoId;
               const sz = isMine ? 34 : 28;
@@ -201,7 +198,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
                     position: 'absolute',
                     left: leftPct,
                     top: topPct,
-                    transform: `translate(calc(-50% + ${offsetX}px), calc(-100% + ${stackY}px))`,
+                    transform: `translate(calc(-50% + ${offsetX}px), calc(-83% + ${stackY}px))`,
                     transition: 'left 1.0s cubic-bezier(0.34, 1.56, 0.64, 1), top 1.0s cubic-bezier(0.34, 1.56, 0.64, 1)',
                     zIndex: isMine ? 2 : 1,
                     filter: isActive ? `drop-shadow(0 0 10px ${g.cor})` : `drop-shadow(0 2px 4px rgba(0,0,0,0.5))`,
