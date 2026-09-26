@@ -1,0 +1,222 @@
+'use client';
+import { use, useState, useEffect } from 'react';
+import { useJogo } from '@/hooks/useJogo';
+import Tabuleiro from '@/components/Tabuleiro';
+import QRCode from '@/components/QRCode';
+import MapaModal from '@/components/MapaModal';
+
+export default function ProfessorPage({ params }: { params: Promise<{ codigo: string }> }) {
+  const { codigo } = use(params);
+  const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, pausar } = useJogo(codigo);
+  const [showQR, setShowQR] = useState(false);
+  const [mapaAberto, setMapaAberto] = useState(false);
+  const [salaURL, setSalaURL] = useState('');
+  const [ip, setIp] = useState('');
+
+  useEffect(() => {
+    fetch('/api/ip').then(r => r.json()).then(data => {
+      const localIp = data.ips?.[0] ?? '';
+      setIp(localIp);
+      setSalaURL(localIp
+        ? `http://${localIp}:3000/sala/${codigo}`
+        : `http://localhost:3000/sala/${codigo}`
+      );
+    }).catch(() => setSalaURL(`http://localhost:3000/sala/${codigo}`));
+
+    // Warm up the player page bundle so Turbopack compiles it before students arrive
+    fetch(`/sala/${codigo}`).catch(() => {});
+  }, [codigo]);
+
+  if (carregando) return (
+    <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
+      <span className="text-[#7D8590] text-sm animate-pulse">Carregando...</span>
+    </div>
+  );
+  if (erro || !sala) return (
+    <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center gap-3 p-6">
+      <p className="text-red-400 font-bold">{erro ?? 'Sala não encontrada.'}</p>
+      <a href="/" className="text-sm text-[#7D8590] hover:text-white underline">← Voltar</a>
+    </div>
+  );
+
+  const grupoAtual  = grupos.find(g => g.id === sala.turno_grupo_id);
+  const espectadorURL = salaURL.replace(`/sala/${codigo}`, `/sala/${codigo}/espectador`);
+
+  return (
+    <>
+      {mapaAberto && (
+        <MapaModal grupos={grupos} grupoAtual={sala.turno_grupo_id} meuGrupoId={null} onFechar={() => setMapaAberto(false)} />
+      )}
+
+      <main className="min-h-screen bg-[#0D1117] pb-10">
+
+        {/* ── HEADER ── */}
+        <div className="border-b border-[#21262D]">
+          <div className="px-5 pt-12 pb-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-[#161B22] border border-[#30363D] flex items-center justify-center text-2xl flex-shrink-0">
+              🎓
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="font-black text-white text-base leading-tight">Painel do Professor</h1>
+              <p className="text-[#7D8590] text-xs mt-0.5">
+                Código: <span className="font-mono font-black text-amber-400 tracking-widest">{codigo}</span>
+              </p>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <button
+                onClick={() => setShowQR(v => !v)}
+                className="text-xs font-bold px-3 py-2 rounded-xl transition-all border"
+                style={{
+                  backgroundColor: showQR ? '#6366F122' : '#161B22',
+                  borderColor: showQR ? '#6366F155' : '#30363D',
+                  color: showQR ? '#818CF8' : '#7D8590',
+                }}
+              >
+                {showQR ? '✕' : '📱'} QR
+              </button>
+              {espectadorURL && (
+                <a href={espectadorURL} target="_blank"
+                  className="text-xs font-bold px-3 py-2 rounded-xl bg-[#161B22] border border-[#30363D] text-[#7D8590] hover:text-white transition-all">
+                  👁 Telão
+                </a>
+              )}
+              <button
+                onClick={() => setMapaAberto(true)}
+                className="text-xs font-bold px-3 py-2 rounded-xl bg-[#161B22] border border-[#30363D] text-[#7D8590] hover:text-white transition-all"
+              >
+                🗺 Mapa
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── QR PANEL ── */}
+        {showQR && salaURL && (
+          <div className="border-b border-[#21262D] bg-[#161B22] px-5 py-6 flex flex-col items-center gap-4">
+            <p className="text-[#7D8590] text-sm">Mostre este QR para os grupos entrarem:</p>
+            <div className="bg-white p-3 rounded-2xl shadow-2xl">
+              <QRCode value={salaURL} size={180} />
+            </div>
+            <p className="font-mono text-amber-400 font-bold text-sm break-all text-center">{salaURL}</p>
+            {ip && (
+              <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 text-center text-sm">
+                <p className="text-violet-300 text-xs">
+                  📡 IP local: <strong className="text-white">{ip}</strong>
+                </p>
+                <p className="text-violet-400/60 text-xs mt-1">Celulares no mesmo WiFi acessam este endereço</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="px-5 py-5 max-w-xl mx-auto flex flex-col gap-4">
+
+          {/* ── STATUS + CONTROLES ── */}
+          <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-5">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-[#7D8590] text-xs font-semibold uppercase tracking-widest mb-1">Status</p>
+                <p className="font-black text-white text-lg leading-tight">
+                  {sala.status === 'aguardando' && '⏳ Aguardando grupos'}
+                  {sala.status === 'jogando' && (sala.pausado ? '⏸ Pausado' : '▶ Em jogo')}
+                  {sala.status === 'finalizado' && '🏁 Finalizado'}
+                </p>
+                {grupoAtual && sala.status === 'jogando' && (
+                  <p className="text-sm mt-1" style={{ color: grupoAtual.cor }}>
+                    {grupoAtual.emoji} {grupoAtual.nome}
+                    <span className="text-[#7D8590] font-normal ml-1.5 text-xs">— {sala.fase}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                {sala.status === 'aguardando' && (
+                  <button
+                    onClick={iniciarJogo}
+                    disabled={grupos.length === 0}
+                    className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-[#21262D] disabled:text-[#7D8590] text-white font-black px-5 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]"
+                  >
+                    ▶ Iniciar
+                  </button>
+                )}
+                {sala.status === 'jogando' && !sala.pausado && (
+                  <>
+                    <button onClick={pausar}
+                      className="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
+                      ⏸ Pausar
+                    </button>
+                    <button onClick={avancarTurno}
+                      className="bg-violet-600 hover:bg-violet-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
+                      ⏩ Skip
+                    </button>
+                  </>
+                )}
+                {sala.status === 'jogando' && sala.pausado && (
+                  <button onClick={pausar}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97]">
+                    ▶ Retomar
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {sala.status === 'aguardando' && grupos.length === 0 && (
+              <div className="mt-4 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 text-amber-300/80 text-sm">
+                ⚠️ Nenhum grupo entrou ainda. Mostre o QR para os grupos acessarem no celular.
+              </div>
+            )}
+          </div>
+
+          {/* ── GRUPOS ── */}
+          {grupos.length > 0 && (
+            <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-5">
+              <p className="text-[#7D8590] text-xs font-semibold uppercase tracking-widest mb-3">
+                Grupos ({grupos.length})
+              </p>
+              <div className="flex flex-col gap-2">
+                {grupos.map(g => (
+                  <div key={g.id} className="flex items-center gap-3 rounded-xl px-4 py-2.5 border"
+                    style={{
+                      backgroundColor: g.id === sala.turno_grupo_id ? g.cor + '11' : 'transparent',
+                      borderColor: g.id === sala.turno_grupo_id ? g.cor + '44' : '#21262D',
+                    }}>
+                    <span className="text-xl">{g.emoji}</span>
+                    <span className="font-bold flex-1 text-sm" style={{ color: g.cor }}>{g.nome}</span>
+                    <span className="text-[#7D8590] text-xs">
+                      Casa <strong className="text-white">{g.posicao}</strong>
+                    </span>
+                    <div className="flex gap-1 ml-1">
+                      <button onClick={() => ajustarPosicao(g.id, -1)}
+                        className="w-7 h-7 rounded-lg font-black text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all active:scale-95">
+                        −
+                      </button>
+                      <button onClick={() => ajustarPosicao(g.id, 1)}
+                        className="w-7 h-7 rounded-lg font-black text-sm bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all active:scale-95">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── LINK DE ACESSO ── */}
+          {salaURL && sala.status === 'aguardando' && !showQR && (
+            <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl px-4 py-3">
+              <p className="text-violet-300 text-xs font-semibold mb-1">📡 Grupos acessam pelo celular:</p>
+              <p className="font-mono text-amber-400 font-bold text-sm break-all">{salaURL}</p>
+            </div>
+          )}
+
+          {/* ── TABULEIRO COMPACTO ── */}
+          <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-4">
+            <p className="text-[#7D8590] text-xs font-semibold uppercase tracking-widest mb-3">Visão geral</p>
+            <Tabuleiro grupos={grupos} grupoAtual={sala.turno_grupo_id} compact />
+          </div>
+
+        </div>
+      </main>
+    </>
+  );
+}
