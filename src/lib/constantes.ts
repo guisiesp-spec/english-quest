@@ -82,7 +82,7 @@ export const CATEGORIAS_REAIS: Array<'grammar' | 'vocabulary' | 'time_place'> = 
 ];
 
 export const CHALLENGE_NIVEL_MIN = 4;
-export const TIMER_DADO = 15;
+export const TIMER_DADO = 10;
 export const TIMER_MULTIPLA_ESCOLHA = 30;
 export const TIMER_VF = 20;
 export const TIMER_LIGAR = 45;

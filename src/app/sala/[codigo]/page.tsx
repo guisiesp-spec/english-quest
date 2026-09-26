@@ -74,7 +74,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   useEffect(() => { avancarRef.current = jogo.avancarTurno; });
   useEffect(() => { rolarRef.current = jogo.rolarDado; });
 
-  // Dice timer — auto-rolls a random category if player doesn't roll in time
+  // Dice timer — countdown; when it hits 0 a separate effect fires the auto-roll
   useEffect(() => {
     if (sala?.fase !== 'dado' || !ehMeuTurno || !meuGrupoId || esperandoWild) {
       setTempoDado(TIMER_DADO);
@@ -82,18 +82,17 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
     }
     setTempoDado(TIMER_DADO);
     const id = setInterval(() => {
-      setTempoDado(t => {
-        if (t <= 1) {
-          clearInterval(id);
-          const cats: CategoriasDado[] = ['grammar', 'vocabulary', 'time_place'];
-          rolarRef.current(meuGrupoId, cats[Math.floor(Math.random() * cats.length)], []);
-          return 0;
-        }
-        return t - 1;
-      });
+      setTempoDado(t => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(id);
   }, [sala?.fase, ehMeuTurno, meuGrupoId, esperandoWild]);
+
+  // Auto-roll when countdown reaches 0
+  useEffect(() => {
+    if (tempoDado !== 0 || sala?.fase !== 'dado' || !ehMeuTurno || !meuGrupoId || esperandoWild) return;
+    const cats: CategoriasDado[] = ['grammar', 'vocabulary', 'time_place'];
+    rolarRef.current(meuGrupoId, cats[Math.floor(Math.random() * cats.length)], []);
+  }, [tempoDado, sala?.fase, ehMeuTurno, meuGrupoId, esperandoWild]);
 
   // Client-side auto-advance — only for correct answers; wrong answers wait for professor
   useEffect(() => {
