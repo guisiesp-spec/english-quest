@@ -3,16 +3,13 @@ import { use, useState, useEffect } from 'react';
 import { useJogo } from '@/hooks/useJogo';
 import type { Pergunta, PerguntaMultiplaEscolha, PerguntaVF, PerguntaLigar } from '@/lib/tipos';
 import { DADO_CONFIG } from '@/lib/constantes';
-import Tabuleiro from '@/components/Tabuleiro';
 import QRCode from '@/components/QRCode';
-import MapaModal from '@/components/MapaModal';
 import MinigameRenderer from '@/components/MinigameRenderer';
 
 export default function ProfessorPage({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = use(params);
   const { sala, grupos, carregando, erro, iniciarJogo, avancarTurno, ajustarPosicao, pausar, encerrarJogo } = useJogo(codigo);
   const [showQR, setShowQR] = useState(false);
-  const [mapaAberto, setMapaAberto] = useState(false);
   const [salaURL, setSalaURL] = useState('');
   const [ip, setIp] = useState('');
   const [confirmEncerrar, setConfirmEncerrar] = useState(false);
@@ -58,10 +55,6 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
 
   return (
     <>
-      {mapaAberto && (
-        <MapaModal grupos={grupos} grupoAtual={sala.turno_grupo_id} meuGrupoId={null} onFechar={() => setMapaAberto(false)} />
-      )}
-
       {/* Confirmação encerrar */}
       {confirmEncerrar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
@@ -114,18 +107,6 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
                 }}
               >
                 {showQR ? '✕' : '📱'} QR
-              </button>
-              {espectadorURL && (
-                <a href={espectadorURL} target="_blank"
-                  className="text-xs font-bold px-3 py-2 rounded-xl bg-[#161B22] border border-[#30363D] text-[#7D8590] hover:text-white transition-all">
-                  👁 Telão
-                </a>
-              )}
-              <button
-                onClick={() => setMapaAberto(true)}
-                className="text-xs font-bold px-3 py-2 rounded-xl bg-[#161B22] border border-[#30363D] text-[#7D8590] hover:text-white transition-all"
-              >
-                🗺 Mapa
               </button>
             </div>
           </div>
@@ -403,12 +384,6 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
               <p className="font-mono text-amber-400 font-bold text-sm break-all">{salaURL}</p>
             </div>
           )}
-
-          {/* ── TABULEIRO COMPACTO ── */}
-          <div className="bg-[#161B22] border border-[#21262D] rounded-2xl p-4">
-            <p className="text-[#7D8590] text-xs font-semibold uppercase tracking-widest mb-3">Visão geral</p>
-            <Tabuleiro grupos={grupos} grupoAtual={sala.turno_grupo_id} compact />
-          </div>
 
         </div>
       </main>

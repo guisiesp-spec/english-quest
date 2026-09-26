@@ -374,4 +374,106 @@ export const perguntasExtras2: Pergunta[] = [
     opcoes: ['T-shirt', 'trousers', 'jacket', 'socks'],
     resposta: 'T-shirt',
   },
+
+  // ==================== PERGUNTAS DIFÍCEIS — mesmos temas, maior dificuldade ====================
+
+  // Grammar nivel 4-5 — Simple Present, negação, perguntas difíceis
+  {
+    id: 'e2_hard_gr_4_1', unidade: 'Extra 2', categoria: 'grammar', nivel: 4, tipo: 'multipla_escolha',
+    enunciado: '"They don\'t go to school on ___." Qual dia NÃO completa corretamente essa frase?',
+    opcoes: ['Monday', 'Saturday', 'Sunday', 'Both Saturday and Sunday'],
+    resposta: 'Monday',
+  },
+  {
+    id: 'e2_hard_gr_4_2', unidade: 'Extra 2', categoria: 'grammar', nivel: 4, tipo: 'multipla_escolha',
+    enunciado: 'Qual resposta está ERRADA para "Does she speak French?"',
+    opcoes: ['Yes, she does speak.', 'No, she doesn\'t.', 'Yes, she does.', 'No, she does not.'],
+    resposta: 'Yes, she does speak.',
+  },
+  {
+    id: 'e2_hard_gr_4_3', unidade: 'Extra 2', categoria: 'grammar', nivel: 4, tipo: 'ligar',
+    enunciado: 'Relacione a pergunta com a resposta curta correta:',
+    pares: [
+      { esquerda: 'Do you like pizza?', direita: 'Yes, I do.' },
+      { esquerda: 'Does he work here?', direita: 'No, he doesn\'t.' },
+      { esquerda: 'Are they students?', direita: 'Yes, they are.' },
+      { esquerda: 'Is she at home?', direita: 'No, she isn\'t.' },
+    ],
+  },
+
+  // Grammar nivel 5 — Present Continuous vs Simple Present
+  {
+    id: 'e2_hard_gr_5_4', unidade: 'Extra 2', categoria: 'grammar', nivel: 5, tipo: 'multipla_escolha',
+    enunciado: 'Qual é o SUPERLATIVO de "good"?',
+    opcoes: ['the best', 'the goodest', 'better', 'the most good'],
+    resposta: 'the best',
+  },
+  {
+    id: 'e2_hard_gr_5_5', unidade: 'Extra 2', categoria: 'grammar', nivel: 5, tipo: 'multipla_escolha',
+    enunciado: '"She doesn\'t ___ any homework today." Qual verbo NÃO pode completar a frase?',
+    opcoes: ['have', 'has', 'do', 'need'],
+    resposta: 'has',
+  },
+  {
+    id: 'e2_hard_gr_5_6', unidade: 'Extra 2', categoria: 'grammar', nivel: 5, tipo: 'multipla_escolha',
+    enunciado: 'Qual é a forma NEGATIVA de "It will rain tomorrow."?',
+    opcoes: ["It won't rain tomorrow.", "It willn't rain tomorrow.", "It doesn't will rain tomorrow.", "It won't rains tomorrow."],
+    resposta: "It won't rain tomorrow.",
+  },
+
+  // Vocabulary nivel 4-5 — números, letras, dias (mais difícil)
+  {
+    id: 'e2_hard_voc_4_4', unidade: 'Extra 2', categoria: 'vocabulary', nivel: 4, tipo: 'multipla_escolha',
+    enunciado: 'Como se diz o número 1.000 em inglês?',
+    opcoes: ['one thousand', 'one million', 'one hundred', 'ten hundred'],
+    resposta: 'one thousand',
+  },
+  {
+    id: 'e2_hard_voc_4_5', unidade: 'Extra 2', categoria: 'vocabulary', nivel: 4, tipo: 'multipla_escolha',
+    enunciado: 'Qual palavra NÃO é um sentimento (feeling) em inglês?',
+    opcoes: ['kitchen', 'bored', 'excited', 'scared'],
+    resposta: 'kitchen',
+  },
+  {
+    id: 'e2_hard_voc_5_4', unidade: 'Extra 2', categoria: 'vocabulary', nivel: 5, tipo: 'multipla_escolha',
+    enunciado: 'Qual frase com "can" está CORRETA?',
+    opcoes: ['She can swim.', 'She cans swim.', 'She can swims.', 'She can swimming.'],
+    resposta: 'She can swim.',
+  },
+  {
+    id: 'e2_hard_voc_5_5', unidade: 'Extra 2', categoria: 'vocabulary', nivel: 5, tipo: 'multipla_escolha',
+    enunciado: 'Como se diz 1.500 em inglês?',
+    opcoes: ['one thousand five hundred', 'fifteen hundred', 'one million five hundred', 'one hundred and five thousand'],
+    resposta: 'one thousand five hundred',
+  },
+
+  // Time & Place nivel 4-5 — perguntas W mais difíceis
+  {
+    id: 'e2_hard_tp_4_4', unidade: 'Extra 2', categoria: 'time_place', nivel: 4, tipo: 'multipla_escolha',
+    enunciado: 'Complete: "___ do you go to the gym?" — a resposta esperada é "three times a week".',
+    opcoes: ['How often', 'How many', 'How much', 'How long'],
+    resposta: 'How often',
+  },
+  {
+    id: 'e2_hard_tp_4_5', unidade: 'Extra 2', categoria: 'time_place', nivel: 4, tipo: 'verdadeiro_falso',
+    enunciado: '"How long does it take?" é usada para perguntar sobre a DURAÇÃO de algo.',
+    resposta: 'verdadeiro',
+    explicacao: 'Ex: "How long does it take to get there?" — Quanto tempo leva para chegar lá?',
+  },
+  {
+    id: 'e2_hard_tp_5_4', unidade: 'Extra 2', categoria: 'time_place', nivel: 5, tipo: 'multipla_escolha',
+    enunciado: '"___ did you last see her?" (Quando foi a última vez que você a viu?)',
+    opcoes: ['When', 'Where', 'What time', 'How long'],
+    resposta: 'When',
+  },
+  {
+    id: 'e2_hard_tp_5_5', unidade: 'Extra 2', categoria: 'time_place', nivel: 5, tipo: 'ligar',
+    enunciado: 'Relacione a pergunta com o tipo de resposta esperada:',
+    pares: [
+      { esquerda: 'How many students?', direita: 'A number (30 students)' },
+      { esquerda: 'How much water?', direita: 'A quantity (2 liters)' },
+      { esquerda: 'How often?', direita: 'A frequency (twice a week)' },
+      { esquerda: 'How long?', direita: 'A duration (3 hours)' },
+    ],
+  },
 ];

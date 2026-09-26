@@ -1,6 +1,6 @@
 import type { CasaEspecial, ConfigDado, TipoCasa } from './tipos';
 
-export const TOTAL_CASAS = 300;
+export const TOTAL_CASAS = 100;
 
 export const GRUPOS_CONFIG = [
   { nome: 'Grupo Vermelho',  cor: '#ef4444', corTexto: '#ffffff', emoji: '🔴', id_slot: 0  },

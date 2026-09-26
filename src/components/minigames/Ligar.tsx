@@ -124,7 +124,7 @@ export default function Ligar({ pergunta, onResponder, readonly }: Props) {
           <div className="flex items-center justify-center gap-3 mt-1">
             <p className="text-xs text-slate-400">Toque na esquerda, depois na direita para conectar</p>
             <span className="text-xs font-bold" style={{ color: numErros === 0 ? '#6b7280' : numErros === 1 ? '#f59e0b' : '#ef4444' }}>
-              ❌ {numErros}/3
+              ❌ {numErros}/2
             </span>
           </div>
         )}
