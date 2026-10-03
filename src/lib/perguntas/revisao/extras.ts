@@ -1,4 +1,4 @@
-import type { Pergunta } from '../tipos';
+import type { Pergunta } from '../../tipos';
 
 // 6 W's: What, Where, When, Who, Why, Which
 // 4 How's: How, How often, How many, How much

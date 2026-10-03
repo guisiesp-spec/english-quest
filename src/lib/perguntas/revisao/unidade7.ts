@@ -1,4 +1,4 @@
-import type { Pergunta } from '../tipos';
+import type { Pergunta } from '../../tipos';
 
 export const perguntasUnidade7: Pergunta[] = [
   // === Level 1 ===

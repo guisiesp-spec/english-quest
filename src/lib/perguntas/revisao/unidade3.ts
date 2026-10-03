@@ -1,4 +1,4 @@
-import type { Pergunta } from '../tipos';
+import type { Pergunta } from '../../tipos';
 
 export const perguntasUnidade3: Pergunta[] = [
   // === FAMILY — Level 1 ===
