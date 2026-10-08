@@ -23,6 +23,7 @@ import { perguntasUnidade12 } from './unidade12';
 import { perguntasUnidade13 } from './unidade13';
 import { perguntasUnidade14 } from './unidade14';
 import { perguntasExtras2 } from './extras2';
+import { perguntasUnidade15 } from './unidade15';
 
 export const perguntasRevisao: Pergunta[] = [
   ...perguntasUnidade1,
@@ -40,6 +41,7 @@ export const perguntasRevisao: Pergunta[] = [
   ...perguntasUnidade12,
   ...perguntasUnidade13,
   ...perguntasUnidade14,
+  ...perguntasUnidade15,
 ];
 
 export {
@@ -58,4 +60,5 @@ export {
   perguntasUnidade12,
   perguntasUnidade13,
   perguntasUnidade14,
+  perguntasUnidade15,
 };
