@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { GraduationCap, Wifi, BookOpen } from 'lucide-react';
 import { isLocal } from '@/lib/modoJogo';
 
 export default function ProfessorNovaSala() {
@@ -36,14 +37,14 @@ export default function ProfessorNovaSala() {
 
       {/* Logo */}
       <div className="flex flex-col items-center gap-3 mb-10">
-        <div className="w-20 h-20 rounded-3xl bg-[#161B22] border border-[#30363D] flex items-center justify-center text-4xl shadow-2xl">
-          🎓
+        <div className="w-20 h-20 rounded-3xl bg-[#161B22] border border-[#30363D] flex items-center justify-center shadow-2xl">
+          <GraduationCap size={40} color="#7D8590" />
         </div>
         <h1 className="text-3xl font-black text-white tracking-tight">Painel do Professor</h1>
         <p className="text-[#7D8590] text-sm">English Quest</p>
         {local && (
-          <span className="text-[11px] font-bold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-3 py-1 rounded-full">
-            📡 Modo WiFi Local
+          <span className="text-[11px] font-bold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-3 py-1 rounded-full flex items-center gap-1">
+            <Wifi size={11} /> Modo WiFi Local
           </span>
         )}
       </div>
@@ -105,7 +106,7 @@ export default function ProfessorNovaSala() {
           href="/professor/perguntas"
           className="text-center text-xs text-[#7D8590] hover:text-white transition-colors"
         >
-          📚 Ver banco de perguntas
+          <BookOpen size={12} className="inline mr-1" /> Ver banco de perguntas
         </a>
 
         <a

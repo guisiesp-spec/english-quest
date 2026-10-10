@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Wifi } from 'lucide-react';
 import { isLocal } from '@/lib/modoJogo';
 
 export default function Home() {
@@ -41,8 +42,8 @@ export default function Home() {
         <h1 className="text-3xl font-black text-white tracking-tight">Siesp Route</h1>
         <p className="text-[#7D8590] text-sm">Jogo educacional multiplayer</p>
         {local && (
-          <span className="text-[11px] font-bold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-3 py-1 rounded-full">
-            📡 Modo WiFi Local
+          <span className="text-[11px] font-bold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-3 py-1 rounded-full flex items-center gap-1">
+            <Wifi size={11} /> Modo WiFi Local
           </span>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { todasPerguntas } from '@/lib/perguntas/index';
 import type { Pergunta, PerguntaMultiplaEscolha, PerguntaVF, PerguntaLigar } from '@/lib/tipos';
 import Link from 'next/link';
+import { Lightbulb, BookOpen } from 'lucide-react';
 
 const CAT_LABEL: Record<string, string> = {
   grammar:    'Gramática',
@@ -80,7 +81,7 @@ function CardVF({ p }: { p: PerguntaVF }) {
         ))}
       </div>
       {p.explicacao && (
-        <p style={{ marginTop: 6, fontSize: 12, color: '#60a5fa' }}>💡 {p.explicacao}</p>
+        <p style={{ marginTop: 6, fontSize: 12, color: '#60a5fa', display: 'flex', alignItems: 'center', gap: 4 }}><Lightbulb size={12} /> {p.explicacao}</p>
       )}
     </div>
   );
@@ -155,7 +156,7 @@ export default function PerguntasPage() {
             ← Voltar
           </Link>
           <h1 style={{ color: '#e6edf3', fontSize: 24, fontWeight: 900, margin: '12px 0 4px' }}>
-            📚 Banco de Perguntas
+            <BookOpen size={20} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle' }} /> Banco de Perguntas
           </h1>
           <p style={{ color: '#8b949e', fontSize: 14, margin: 0 }}>
             {total} perguntas no total — revise e edite em{' '}
