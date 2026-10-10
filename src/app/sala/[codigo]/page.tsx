@@ -65,6 +65,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   const prevPosRef    = useRef<number>(-1);
   const prevTurnoRef  = useRef<string | null>(null);
   const timerExpiradoRef = useRef(false);
+  const joiningRef    = useRef(false);
 
   const meuGrupo   = grupos.find(g => g.id === meuGrupoId) ?? null;
   const ehMeuTurno = sala?.turno_grupo_id === meuGrupoId;
@@ -127,6 +128,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
   // Show sorteio animation when game starts
   useEffect(() => {
     if (prevStatusRef.current === 'aguardando' && sala?.status === 'jogando') {
+      prevStatusRef.current = 'jogando'; // update immediately so polls don't retrigger
       setMostrarSorteio(true);
       const t = setTimeout(() => setMostrarSorteio(false), 4200);
       return () => clearTimeout(t);
@@ -134,16 +136,19 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
     if (sala?.status) prevStatusRef.current = sala.status;
   }, [sala?.status]);
 
-  // Enter room
+  // Enter room — sessionStorage is tab-local (unlike localStorage) so each tab gets its own group
   useEffect(() => {
-    if (!sala || meuGrupoId) return;
+    if (!sala || meuGrupoId || joiningRef.current) return;
     const chave = `grupo_${sala.id}`;
-    const salvo = localStorage.getItem(chave);
+    const salvo = sessionStorage.getItem(chave);
     if (salvo && grupos.find(g => g.id === salvo)) { setMeuGrupoId(salvo); return; }
+    joiningRef.current = true;
     jogo.entrarNaSala(grupos.length).then(g => {
-      if (g) { setMeuGrupoId(g.id); localStorage.setItem(chave, g.id); }
+      if (g) { setMeuGrupoId(g.id); sessionStorage.setItem(chave, g.id); }
+      joiningRef.current = false;
     });
-  }, [sala?.id, grupos.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sala?.id]);
 
   // Auto-scroll board to player's piece
   useEffect(() => {
