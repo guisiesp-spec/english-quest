@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       {
         source: "/professor",
         destination: "https://english-quest-v3-siesparty.vercel.app/professor",
-        permanent: false,
+        permanent: true,
       },
     ];
   },
