@@ -112,7 +112,7 @@ export default function Dado({ onRolar, disabled, categoriaForçada }: Props) {
                     backgroundColor: cfg.corBg,
                   }}
                 >
-                  <span style={{ fontSize: 36, lineHeight: 1 }}>{cfg.emoji}</span>
+                  <span style={{ fontSize: 28, lineHeight: 1, fontWeight: 700, color: cfg.cor }}>{cfg.label.slice(0, 4)}</span>
                   <span style={{ fontSize: 10, fontWeight: 700, color: cfg.cor, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
                     {cfg.label}
                   </span>
@@ -132,7 +132,7 @@ export default function Dado({ onRolar, disabled, categoriaForçada }: Props) {
         )}
         {resultado && config && (
           <p className="text-sm font-bold animate-pop-in" style={{ color: config.cor }}>
-            {config.emoji} {config.label}!
+            {config.label}!
           </p>
         )}
       </div>

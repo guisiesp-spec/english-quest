@@ -1,13 +1,27 @@
 'use client';
 import { useState, useEffect, useRef, use } from 'react';
+import {
+  BookOpen, MessageSquare, Clock, Zap, Shuffle, HelpCircle,
+  Trophy, Star, Gamepad2, AlertCircle, Sparkles, Timer, Frown,
+  Rocket, RotateCw,
+} from 'lucide-react';
 import type { Pergunta, CategoriasDado, Grupo } from '@/lib/tipos';
 import { useJogo } from '@/hooks/useJogo';
 import { DADO_CONFIG, DURACAO_RESULTADO, TIMER_DADO } from '@/lib/constantes';
-import Dado from '@/components/Dado';
+import Roleta from '@/components/Roleta';
 import MinigameRenderer from '@/components/MinigameRenderer';
 import WildCard from '@/components/WildCard';
 import MapaPath, { nodePos, MAPA_W, MAPA_H } from '@/components/MapaPath';
 import { getEstrelaCategoria } from '@/lib/jogoLocal';
+
+const CAT_ICONS = {
+  grammar:    BookOpen,
+  vocabulary: MessageSquare,
+  time_place: Clock,
+  challenge:  Zap,
+  wild:       Shuffle,
+  mystery:    HelpCircle,
+} as const;
 
 const MUTED  = '#7D8590';
 const BORDER = '#21262D';
@@ -257,10 +271,12 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
       >
         <div className="px-4 pt-10 pb-3 flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border"
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border"
             style={{ backgroundColor: cor + '22', borderColor: cor + '66' }}
           >
-            {meuGrupo?.emoji ?? '🎮'}
+            {meuGrupo
+              ? <span style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: cor, display: 'inline-block' }} />
+              : <Gamepad2 size={20} color={cor} />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -280,10 +296,10 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
             style={{ backgroundColor: '#161B22', borderColor: BORDER }}
           >
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
               style={{ backgroundColor: grupoAtual.cor + '22', border: `2px solid ${grupoAtual.cor}` }}
             >
-              {grupoAtual.emoji}
+              <span style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: grupoAtual.cor, display: 'inline-block' }} />
             </div>
             <p className="text-white text-base mb-1" style={{ color: MUTED }}>Vez de</p>
             <p className="font-black text-3xl" style={{ color: grupoAtual.cor }}>{grupoAtual.nome}</p>
@@ -315,7 +331,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
               {/* Timer bar */}
               <div className="w-full" style={{ maxWidth: 280 }}>
                 <div className="flex justify-between text-xs font-bold mb-1" style={{ color: MUTED }}>
-                  <span>🎲 Role o dado!</span>
+                  <span className="flex items-center gap-1"><Shuffle size={12} /> Gire a roleta!</span>
                   <span style={{ color: tempoDado <= 5 ? '#ef4444' : tempoDado <= 10 ? '#f59e0b' : '#58cc02' }}>
                     {tempoDado}s
                   </span>
@@ -331,25 +347,25 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
                 </div>
               </div>
               <p className="text-sm" style={{ color: MUTED }}>Sorteia a categoria da pergunta</p>
-              <Dado onRolar={handleDado} />
+              <Roleta onRolar={handleDado} />
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5 py-4 animate-pop-in text-center">
               {grupoAtual && (
                 <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center text-4xl border-2"
+                  className="w-20 h-20 rounded-full flex items-center justify-center border-2"
                   style={{ backgroundColor: grupoAtual.cor + '22', borderColor: grupoAtual.cor }}
                 >
-                  {grupoAtual.emoji}
+                  <span style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: grupoAtual.cor, display: 'inline-block' }} />
                 </div>
               )}
               <div>
                 <p className="font-black text-2xl" style={{ color: grupoAtual?.cor ?? '#fff' }}>
                   {grupoAtual?.nome}
                 </p>
-                <p className="text-sm mt-1" style={{ color: MUTED }}>está rolando o dado...</p>
+                <p className="text-sm mt-1" style={{ color: MUTED }}>está girando a roleta...</p>
               </div>
-              <span className="text-5xl inline-block animate-spin" style={{ animationDuration: '1.2s' }}>🎲</span>
+              <RotateCw size={48} color={grupoAtual?.cor ?? '#7D8590'} className="animate-spin" style={{ animationDuration: '1.2s' }} />
             </div>
           )}
         </Overlay>
@@ -363,7 +379,7 @@ export default function SalaJogador({ params }: { params: Promise<{ codigo: stri
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border"
                 style={{ backgroundColor: configCat.corBg + '33', color: configCat.cor, borderColor: configCat.cor + '44' }}
               >
-                <span className="text-base">{configCat.emoji}</span>
+                {(() => { const Icon = CAT_ICONS[sala.categoria_atual!]; return <Icon size={16} color={configCat.cor} />; })()}
                 <span>{configCat.label}</span>
                 {meuGrupo && ehMeuTurno && (
                   <span className="ml-auto text-xs flex items-center gap-0.5">
@@ -434,8 +450,9 @@ function SorteioModal({ grupos, vencedorId }: { grupos: Grupo[]; vencedorId: str
       style={{ backgroundColor: '#161B22', borderColor: BORDER }}
     >
       {!revelado && (
-        <p className="text-white font-black text-xl mb-5">
-          {grupos.length <= 2 ? '🪙 Jogando moeda...' : '🎲 Sorteando time...'}
+        <p className="text-white font-black text-xl mb-5 flex items-center justify-center gap-2">
+          <RotateCw size={20} className="animate-spin" />
+          {grupos.length <= 2 ? 'Jogando moeda...' : 'Sorteando time...'}
         </p>
       )}
 
@@ -446,10 +463,11 @@ function SorteioModal({ grupos, vencedorId }: { grupos: Grupo[]; vencedorId: str
 
       {revelado && vencedor && (
         <div className="mt-6 animate-pop-in">
-          <p className="font-black text-3xl" style={{ color: vencedor.cor }}>
-            {vencedor.emoji} {vencedor.nome}
+          <p className="font-black text-3xl flex items-center gap-2" style={{ color: vencedor.cor }}>
+            <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: vencedor.cor, display: 'inline-block', border: '2px solid white' }} />
+            {vencedor.nome}
           </p>
-          <p className="text-white text-lg mt-1">começa primeiro! 🚀</p>
+          <p className="text-white text-lg mt-1 flex items-center gap-1.5">começa primeiro! <Rocket size={18} color="#fff" /></p>
         </div>
       )}
     </div>
@@ -500,13 +518,13 @@ function MoedaFlip3D({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedor
           className="coin-face coin-face-front"
           style={{ backgroundColor: g0?.cor ?? '#6366F1', boxShadow: `0 0 30px ${g0?.cor ?? '#6366F1'}66` }}
         >
-          <span style={{ fontSize: 48 }}>{g0?.emoji}</span>
+          <span style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.3)', display: 'inline-block', border: '3px solid rgba(255,255,255,0.6)' }} />
         </div>
         <div
           className="coin-face coin-face-back"
           style={{ backgroundColor: g1?.cor ?? '#6366F1', boxShadow: `0 0 30px ${g1?.cor ?? '#6366F1'}66` }}
         >
-          <span style={{ fontSize: 48 }}>{g1?.emoji}</span>
+          <span style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.3)', display: 'inline-block', border: '3px solid rgba(255,255,255,0.6)' }} />
         </div>
       </div>
     </div>
@@ -530,15 +548,15 @@ function SorteioTimes({ grupos, vencedor, revelado }: { grupos: Grupo[]; vencedo
             }}
           >
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-3xl border-2"
+              className="w-16 h-16 rounded-full flex items-center justify-center border-2"
               style={{
-                backgroundColor: g.cor,
+                backgroundColor: g.cor + '33',
                 borderColor:     isWinner && revelado ? '#FCD34D' : g.cor,
                 boxShadow:       isWinner && revelado ? `0 0 25px ${g.cor}` : 'none',
                 animation:       !revelado ? `tokenBounce 0.4s ${i * 0.12}s infinite alternate` : 'none',
               }}
             >
-              {g.emoji}
+              <span style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: g.cor, display: 'inline-block' }} />
             </div>
             <span className="text-xs text-white font-bold">{g.nome}</span>
           </div>
@@ -564,12 +582,13 @@ function ResultadoPopup({
                   : isTimeout ? 'bg-amber-500/10 border-amber-500/30'
                   : 'bg-red-500/10 border-red-500/30';
   const textClass = ok ? 'text-emerald-400' : isTimeout ? 'text-amber-400' : 'text-red-400';
-  const emoji     = ok ? '🎉' : isTimeout ? '⏰' : '😬';
   const titulo    = ok ? 'Acertou!' : isTimeout ? 'Tempo esgotado!' : 'Errou!';
+  const ResultIcon = ok ? Sparkles : isTimeout ? Timer : Frown;
+  const iconColor  = ok ? '#34d399' : isTimeout ? '#fbbf24' : '#f87171';
 
   return (
     <div className={`rounded-3xl p-6 text-center border flex flex-col items-center gap-3 animate-pop-in ${bgClass}`}>
-      <span className="text-6xl">{emoji}</span>
+      <ResultIcon size={56} color={iconColor} strokeWidth={1.5} />
       <h3 className={`text-2xl font-black ${textClass}`}>
         {titulo}
         {!ehMeuTurno && grupoAtual && (
@@ -577,8 +596,8 @@ function ResultadoPopup({
         )}
       </h3>
       {ok && (
-        <p className="text-white font-bold text-lg">
-          +{resultado.casas_avancadas} casa{resultado.casas_avancadas !== 1 ? 's' : ''} 🚀
+        <p className="text-white font-bold text-lg flex items-center gap-1.5">
+          +{resultado.casas_avancadas} casa{resultado.casas_avancadas !== 1 ? 's' : ''} <Rocket size={18} color="#fff" />
         </p>
       )}
       {!ok && !isTimeout && ehMeuTurno && (
@@ -615,7 +634,7 @@ function AguardandoOverlay({ codigo, grupos, meuGrupoId, cor }: {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm"
               style={{ backgroundColor: g.cor + '18', borderColor: g.cor + '44' }}
             >
-              <span>{g.emoji}</span>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: g.cor, display: 'inline-block' }} />
               <span className="font-bold" style={{ color: g.cor }}>{g.nome}</span>
               {g.id === meuGrupoId && <span className="text-[10px]" style={{ color: MUTED }}>você</span>}
             </div>
@@ -642,10 +661,10 @@ function FimDeJogo({ grupos, meuGrupoId }: { grupos: Grupo[]; meuGrupoId: string
         className="px-6 pt-7 pb-6 flex flex-col items-center gap-2 text-center"
         style={{ background: `linear-gradient(160deg, ${winner?.cor}22 0%, transparent 70%)` }}
       >
-        <span className="text-5xl mb-1">🏆</span>
+        <Trophy size={48} color="#FCD34D" strokeWidth={1.5} className="mb-1" />
         <p className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>Grande vencedor</p>
         <p className="font-black text-4xl leading-tight" style={{ color: winner?.cor }}>
-          {winner?.emoji} {winner?.nome}
+          {winner?.nome}
         </p>
         <p className="text-white font-bold text-sm">
           Casa <span style={{ color: winner?.cor }}>{winner?.posicao}</span>
@@ -657,7 +676,7 @@ function FimDeJogo({ grupos, meuGrupoId }: { grupos: Grupo[]; meuGrupoId: string
               ? { backgroundColor: winner?.cor + '22', borderColor: winner?.cor + '55', color: winner?.cor }
               : { backgroundColor: '#21262D', borderColor: BORDER, color: MUTED }}
           >
-            {souVencedor ? '🎉 Você venceu!' : `Você ficou em ${meuIdx + 1}º lugar`}
+            {souVencedor ? <span className="flex items-center gap-1.5"><Sparkles size={14} /> Você venceu!</span> : `Você ficou em ${meuIdx + 1}º lugar`}
           </div>
         )}
       </div>
@@ -668,7 +687,7 @@ function FimDeJogo({ grupos, meuGrupoId }: { grupos: Grupo[]; meuGrupoId: string
           <p className="text-xs font-semibold uppercase tracking-widest pt-4 pb-1" style={{ color: MUTED }}>Classificação</p>
           {rest.map((g, i) => {
             const pos  = i + 2;
-            const MEDALS: Record<number, string> = { 2: '🥈', 3: '🥉' };
+            const MEDALS: Record<number, string> = { 2: '2º', 3: '3º' };
             const isMe = g.id === meuGrupoId;
             return (
               <div
@@ -679,8 +698,8 @@ function FimDeJogo({ grupos, meuGrupoId }: { grupos: Grupo[]; meuGrupoId: string
                   borderColor:     isMe ? g.cor + '44' : BORDER,
                 }}
               >
-                <span className="text-lg w-7 text-center">{MEDALS[pos] ?? `${pos}º`}</span>
-                <span className="text-lg">{g.emoji}</span>
+                <span className="text-sm w-7 text-center font-bold" style={{ color: MUTED }}>{MEDALS[pos] ?? `${pos}º`}</span>
+                <span style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: g.cor, display: 'inline-block', flexShrink: 0 }} />
                 <span className="font-bold flex-1 text-sm" style={{ color: g.cor }}>{g.nome}</span>
                 <span className="text-xs font-bold" style={{ color: MUTED }}>Casa {g.posicao}</span>
               </div>
@@ -701,7 +720,7 @@ function Splash({ codigo }: { codigo: string }) {
   }, []);
   return (
     <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center gap-4 px-6">
-      <span className="text-4xl animate-pulse">🎮</span>
+      <Gamepad2 size={48} color="#7D8590" className="animate-pulse" />
       <p className="text-sm" style={{ color: MUTED }}>
         Conectando à sala <strong className="text-white font-mono">{codigo}</strong>…
       </p>
@@ -709,11 +728,11 @@ function Splash({ codigo }: { codigo: string }) {
         <div className="mt-2 flex flex-col items-center gap-3 text-center">
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 text-amber-300 text-sm max-w-xs">
             {s >= 10
-              ? '❌ Sala não encontrada ou servidor offline.'
-              : '⏳ Demorando mais que o esperado…'}
+              ? <span className="flex items-center gap-1.5 justify-center"><AlertCircle size={14} /> Sala não encontrada ou servidor offline.</span>
+              : <span className="flex items-center gap-1.5 justify-center"><Timer size={14} /> Demorando mais que o esperado…</span>}
           </div>
-          <a href="/" className="text-sm font-bold px-5 py-2.5 rounded-xl bg-[#161B22] border border-[#30363D] text-white">
-            ← Voltar
+          <a href="/" className="text-sm font-bold px-5 py-2.5 rounded-xl bg-[#161B22] border border-[#30363D] text-white flex items-center gap-1.5">
+            <Star size={14} /> Voltar
           </a>
         </div>
       )}
@@ -724,7 +743,7 @@ function Splash({ codigo }: { codigo: string }) {
 function ErroTela({ msg }: { msg: string }) {
   return (
     <div className="min-h-screen bg-[#0D1117] flex flex-col items-center justify-center gap-4 p-6">
-      <span className="text-3xl">😕</span>
+      <AlertCircle size={40} color="#f87171" />
       <p className="text-red-400 font-bold text-center">{msg}</p>
       <a href="/" className="text-sm font-bold px-5 py-2.5 rounded-xl bg-[#161B22] border border-[#30363D] text-white">← Voltar</a>
     </div>

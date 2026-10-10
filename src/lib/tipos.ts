@@ -84,7 +84,6 @@ export interface CasaEspecial {
 
 export interface ConfigDado {
   categoria: CategoriasDado;
-  emoji: string;
   label: string;
   cor: string;
   corBg: string;

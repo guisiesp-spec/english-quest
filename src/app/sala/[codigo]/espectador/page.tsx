@@ -1,8 +1,21 @@
 'use client';
 import { use, useEffect, useRef } from 'react';
+import {
+  BookOpen, MessageSquare, Clock, Zap, Shuffle, HelpCircle,
+  Trophy, Sparkles, Timer, Frown, RotateCw,
+} from 'lucide-react';
 import type { Pergunta } from '@/lib/tipos';
 import { useJogo } from '@/hooks/useJogo';
 import { DADO_CONFIG } from '@/lib/constantes';
+
+const CAT_ICONS = {
+  grammar:    BookOpen,
+  vocabulary: MessageSquare,
+  time_place: Clock,
+  challenge:  Zap,
+  wild:       Shuffle,
+  mystery:    HelpCircle,
+} as const;
 import MinigameRenderer from '@/components/MinigameRenderer';
 import MapaPath, { nodePos, MAPA_W, MAPA_H } from '@/components/MapaPath';
 
@@ -90,10 +103,11 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
         style={{ background: 'rgba(13,17,23,0.9)', backdropFilter: 'blur(12px)' }}>
         <div className="px-4 pt-10 pb-3 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[#7D8590] text-xs font-semibold">👁 ESPECTADOR — {codigo}</p>
+            <p className="text-[#7D8590] text-xs font-semibold">ESPECTADOR — {codigo}</p>
             {grupoAtual && (
-              <p className="font-black text-base mt-0.5" style={{ color: grupoAtual.cor }}>
-                {grupoAtual.emoji} {grupoAtual.nome}
+              <p className="font-black text-base mt-0.5 flex items-center gap-1.5" style={{ color: grupoAtual.cor }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: grupoAtual.cor, display: 'inline-block' }} />
+                {grupoAtual.nome}
               </p>
             )}
           </div>
@@ -107,7 +121,7 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
                   borderColor: g.id === sala.turno_grupo_id ? g.cor : g.cor + '44',
                   color: g.cor,
                 }}>
-                <span>{g.emoji}</span>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: g.cor, display: 'inline-block' }} />
                 <span>{g.posicao}</span>
               </div>
             ))}
@@ -140,7 +154,7 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
               <p className="font-black text-2xl" style={{ color: grupoAtual?.cor ?? '#fff' }}>{grupoAtual?.nome}</p>
               <p className="text-sm mt-1 text-[#7D8590]">está rolando o dado...</p>
             </div>
-            <span className="text-5xl inline-block animate-spin" style={{ animationDuration: '1.2s' }}>🎲</span>
+            <RotateCw size={48} color={grupoAtual?.cor ?? '#7D8590'} className="animate-spin" style={{ animationDuration: '1.2s' }} />
           </div>
         </Overlay>
       )}
@@ -149,13 +163,14 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
       {sala.status === 'jogando' && sala.fase === 'minigame' && sala.pergunta_atual && (
         <Overlay>
           <div className="flex flex-col gap-3 w-full animate-pop-in">
-            {configCat && grupoAtual && (
+            {configCat && grupoAtual && sala.categoria_atual && (
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border"
                 style={{ backgroundColor: configCat.corBg + '33', color: configCat.cor, borderColor: configCat.cor + '44' }}>
-                <span>{configCat.emoji}</span>
+                {(() => { const Icon = CAT_ICONS[sala.categoria_atual]; return <Icon size={14} color={configCat.cor} />; })()}
                 <span>{configCat.label}</span>
-                <span className="ml-auto font-black" style={{ color: grupoAtual.cor }}>
-                  {grupoAtual.emoji} {grupoAtual.nome}
+                <span className="ml-auto font-black flex items-center gap-1" style={{ color: grupoAtual.cor }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: grupoAtual.cor, display: 'inline-block' }} />
+                  {grupoAtual.nome}
                 </span>
               </div>
             )}
@@ -178,9 +193,11 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
               ? 'bg-amber-500/10 border-amber-500/30'
               : 'bg-red-500/10 border-red-500/30'
           }`}>
-            <span className="text-5xl">
-              {sala.resultado_atual.correto ? '🎉' : sala.resultado_atual.resposta_dada === '__timeout__' ? '⏰' : '😬'}
-            </span>
+            {sala.resultado_atual.correto
+              ? <Sparkles size={48} color="#34d399" strokeWidth={1.5} />
+              : sala.resultado_atual.resposta_dada === '__timeout__'
+                ? <Timer size={48} color="#fbbf24" strokeWidth={1.5} />
+                : <Frown size={48} color="#f87171" strokeWidth={1.5} />}
             <p className={`text-xl font-black ${
               sala.resultado_atual.correto ? 'text-emerald-400'
               : sala.resultado_atual.resposta_dada === '__timeout__' ? 'text-amber-400'
@@ -206,14 +223,14 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
         <Overlay>
           <div className="rounded-3xl border overflow-hidden animate-pop-in" style={{ backgroundColor: '#161B22', borderColor: '#21262D' }}>
             <div className="px-6 pt-7 pb-5 flex flex-col items-center gap-2 text-center">
-              <span className="text-5xl mb-1">🏆</span>
+              <Trophy size={48} color="#FCD34D" strokeWidth={1.5} className="mb-1" />
               {(() => {
                 const winner = [...grupos].sort((a, b) => b.posicao - a.posicao)[0];
                 return winner ? (
                   <>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#7D8590]">Grande vencedor</p>
                     <p className="font-black text-4xl leading-tight" style={{ color: winner.cor }}>
-                      {winner.emoji} {winner.nome}
+                      {winner.nome}
                     </p>
                     <p className="text-white text-sm">Casa {winner.posicao}</p>
                   </>
@@ -224,10 +241,10 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
               {[...grupos].sort((a, b) => b.posicao - a.posicao).map((g, i) => (
                 <div key={g.id} className="flex items-center gap-3 rounded-xl px-4 py-3 border"
                   style={{ backgroundColor: '#0D111799', borderColor: '#21262D' }}>
-                  <span className="text-lg w-7 text-center">
-                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}º`}
+                  <span className="text-sm w-7 text-center font-bold text-[#7D8590]">
+                    {i === 0 ? '1º' : i === 1 ? '2º' : i === 2 ? '3º' : `${i + 1}º`}
                   </span>
-                  <span className="text-lg">{g.emoji}</span>
+                  <span style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: g.cor, display: 'inline-block', flexShrink: 0 }} />
                   <span className="font-bold flex-1 text-sm" style={{ color: g.cor }}>{g.nome}</span>
                   <span className="text-xs font-bold text-[#7D8590]">Casa {g.posicao}</span>
                 </div>
