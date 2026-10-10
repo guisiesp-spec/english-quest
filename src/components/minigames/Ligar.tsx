@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { Sparkles } from 'lucide-react';
 import type { PerguntaLigar } from '@/lib/tipos';
 import { TIMER_LIGAR } from '@/lib/constantes';
 
@@ -179,7 +180,7 @@ export default function Ligar({ pergunta, onResponder, readonly }: Props) {
       </div>
 
       {finalizado && tempo > 0 && (
-        <div className="text-center font-bold text-green-600 text-lg">🎉 Todas conectadas!</div>
+        <div className="text-center font-bold text-green-600 text-lg flex items-center justify-center gap-2"><Sparkles size={18} /> Todas conectadas!</div>
       )}
     </div>
   );

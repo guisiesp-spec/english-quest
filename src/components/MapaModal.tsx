@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useEffect } from 'react';
+import { Star, Gift, Skull, Target, ArrowLeftRight } from 'lucide-react';
 import type { Grupo } from '@/lib/tipos';
 import MapaPath from './MapaPath';
 
@@ -11,17 +12,17 @@ interface Props {
 }
 
 const LEGENDA = [
-  { icon: '⭐', label: 'Checkpoint',    color: '#F59E0B', desc: 'Guarda sua posição' },
-  { icon: '🎁', label: '+2 casas',      color: '#10B981', desc: 'Avança de bônus'    },
-  { icon: '💀', label: '−3 casas',      color: '#EF4444', desc: 'Volta para trás'    },
-  { icon: '🎯', label: 'Turno duplo',   color: '#60A5FA', desc: 'Joga de novo'       },
-  { icon: '🔄', label: 'Troca posição', color: '#A78BFA', desc: 'Troca com alguém'   },
+  { Icon: Star,           label: 'Checkpoint',    color: '#F59E0B', desc: 'Guarda sua posição' },
+  { Icon: Gift,           label: '+2 casas',      color: '#10B981', desc: 'Avança de bônus'    },
+  { Icon: Skull,          label: '−3 casas',      color: '#EF4444', desc: 'Volta para trás'    },
+  { Icon: Target,         label: 'Turno duplo',   color: '#60A5FA', desc: 'Joga de novo'       },
+  { Icon: ArrowLeftRight, label: 'Troca posição', color: '#A78BFA', desc: 'Troca com alguém'   },
 ];
 
 export default function MapaModal({ grupos, grupoAtual, meuGrupoId, onFechar }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sorted    = [...grupos].sort((a, b) => b.posicao - a.posicao);
-  const MEDALS    = ['🥇', '🥈', '🥉'];
+  const MEDALS    = ['1º', '2º', '3º'];
 
   // Scroll to bottom (START) on open, so players see their position first
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function MapaModal({ grupos, grupoAtual, meuGrupoId, onFechar }: 
                 <span className="text-[10px] font-semibold" style={{ color: isMe ? g.cor : '#7D8590' }}>
                   {MEDALS[i] ?? `${i + 1}º`}
                 </span>
-                <span className="text-2xl leading-none">{g.emoji}</span>
+                <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: g.cor, display: 'inline-block' }} />
                 <span className="text-[11px] font-black text-white">
                   {g.posicao}<span className="text-[#30363D] font-normal">/50</span>
                 </span>
@@ -91,14 +92,14 @@ export default function MapaModal({ grupos, grupoAtual, meuGrupoId, onFechar }: 
 
         {/* Direction hint at top */}
         <div className="flex items-center justify-center gap-2 mb-2 opacity-40">
-          <span className="text-xs text-[#7D8590]">🏁 meta</span>
+          <span className="text-xs text-[#7D8590]">meta</span>
         </div>
 
         <MapaPath grupos={grupos} grupoAtual={grupoAtual} />
 
         {/* Direction hint at bottom */}
         <div className="flex items-center justify-center gap-2 mt-2 mb-4 opacity-40">
-          <span className="text-xs text-[#7D8590]">🚀 início</span>
+          <span className="text-xs text-[#7D8590]">início</span>
         </div>
 
         {/* ── LEGENDA ── */}
@@ -107,11 +108,11 @@ export default function MapaModal({ grupos, grupoAtual, meuGrupoId, onFechar }: 
             Casas especiais
           </p>
           <div className="grid grid-cols-1 gap-2">
-            {LEGENDA.map(({ icon, label, color, desc }) => (
+            {LEGENDA.map(({ Icon, label, color, desc }) => (
               <div key={label}
                 className="flex items-center gap-3 rounded-xl px-4 py-2.5 border"
                 style={{ backgroundColor: '#161B22', borderColor: '#21262D' }}>
-                <span className="text-lg w-6 text-center flex-shrink-0">{icon}</span>
+                <Icon size={18} color={color} strokeWidth={1.5} className="flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-bold" style={{ color }}>{label}</span>
                   <span className="text-[#7D8590] text-xs ml-2">{desc}</span>

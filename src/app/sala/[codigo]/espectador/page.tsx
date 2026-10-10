@@ -2,7 +2,7 @@
 import { use, useEffect, useRef } from 'react';
 import {
   BookOpen, MessageSquare, Clock, Zap, Shuffle, HelpCircle,
-  Trophy, Sparkles, Timer, Frown, RotateCw,
+  Trophy, Sparkles, Timer, Frown, RotateCw, Rocket,
 } from 'lucide-react';
 import type { Pergunta } from '@/lib/tipos';
 import { useJogo } from '@/hooks/useJogo';
@@ -133,7 +133,7 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
       {sala.status === 'aguardando' && (
         <Overlay>
           <div className="text-center flex flex-col items-center gap-3">
-            <span className="text-5xl">⏳</span>
+            <Timer size={48} color="#fbbf24" strokeWidth={1.5} />
             <p className="text-white font-black text-xl">Aguardando início</p>
             <p className="text-[#7D8590] text-sm">O professor vai iniciar o jogo em breve</p>
           </div>
@@ -145,9 +145,9 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
         <Overlay>
           <div className="flex flex-col items-center gap-5 py-4 animate-pop-in text-center">
             {grupoAtual && (
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl border-2"
+              <div className="w-20 h-20 rounded-full flex items-center justify-center border-2"
                 style={{ backgroundColor: grupoAtual.cor + '22', borderColor: grupoAtual.cor }}>
-                {grupoAtual.emoji}
+                <span style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: grupoAtual.cor, display: 'inline-block' }} />
               </div>
             )}
             <div>
@@ -207,7 +207,7 @@ export default function EspectadorPage({ params }: { params: Promise<{ codigo: s
               <span className="text-base font-normal opacity-60 ml-2">({grupoAtual.nome})</span>
             </p>
             {sala.resultado_atual.correto && (
-              <p className="text-white font-bold text-lg">+{sala.resultado_atual.casas_avancadas} casas 🚀</p>
+              <p className="text-white font-bold text-lg flex items-center gap-1.5">+{sala.resultado_atual.casas_avancadas} casas <Rocket size={16} /></p>
             )}
             {!sala.resultado_atual.correto && sala.resultado_atual.resposta_correta && (
               <p className="text-sm text-[#7D8590]">

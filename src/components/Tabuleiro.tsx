@@ -1,6 +1,15 @@
 'use client';
+import { Star, Gift, Skull, Target, ArrowLeftRight } from 'lucide-react';
 import type { Grupo } from '@/lib/tipos';
 import { CASAS_ESPECIAIS, TOTAL_CASAS } from '@/lib/constantes';
+
+const TIPO_ICONS: Record<string, React.ElementType> = {
+  checkpoint: Star,
+  presente:   Gift,
+  caveira:    Skull,
+  duplo:      Target,
+  troca:      ArrowLeftRight,
+};
 
 interface Props {
   grupos: Grupo[];
@@ -36,15 +45,15 @@ export default function Tabuleiro({ grupos, grupoAtual, compact = false }: Props
 
   const casaSize = compact ? 'min-h-[42px]' : 'min-h-[58px]';
   const numSize  = compact ? 'text-[9px]' : 'text-[11px] font-bold';
-  const emojiSize = compact ? 'text-base' : 'text-xl';
-  const tokenSize = compact ? 'w-5 h-5 text-[10px]' : 'w-7 h-7 text-sm';
+  const iconSize = compact ? 14 : 18;
+  const tokenSize = compact ? 'w-5 h-5' : 'w-7 h-7';
 
   return (
     <div className="w-full select-none">
       {/* META */}
       <div className="flex justify-center mb-3">
         <div className="bg-yellow-400 text-yellow-900 font-black px-5 py-2 rounded-full text-sm shadow-lg tracking-wide">
-          🏁 META — CASA 50
+          META — CASA 50
         </div>
       </div>
 
@@ -72,9 +81,11 @@ export default function Tabuleiro({ grupos, grupoAtual, compact = false }: Props
                   </span>
 
                   {/* Ícone da casa especial */}
-                  {especial && !aqui.length && (
-                    <span className={`${emojiSize} leading-none mt-0.5`}>{especial.emoji}</span>
-                  )}
+                  {especial && !aqui.length && (() => {
+                    const TipoIcon = TIPO_ICONS[especial.tipo];
+                    const cor = TIPO_ESTILOS[especial.tipo]?.text ?? '#64748b';
+                    return TipoIcon ? <TipoIcon size={iconSize} color={cor} strokeWidth={1.5} style={{ marginTop: 2 }} /> : null;
+                  })()}
 
                   {/* Tokens dos grupos */}
                   {aqui.length > 0 && (
@@ -82,12 +93,10 @@ export default function Tabuleiro({ grupos, grupoAtual, compact = false }: Props
                       {aqui.map(g => (
                         <div
                           key={g.id}
-                          className={`${tokenSize} rounded-full flex items-center justify-center shadow-md border-2 border-white font-bold leading-none`}
+                          className={`${tokenSize} rounded-full shadow-md border-2 border-white`}
                           style={{ backgroundColor: g.cor }}
                           title={g.nome}
-                        >
-                          {g.emoji}
-                        </div>
+                        />
                       ))}
                     </div>
                   )}
@@ -101,21 +110,21 @@ export default function Tabuleiro({ grupos, grupoAtual, compact = false }: Props
       {/* INÍCIO */}
       <div className="flex justify-center mt-3">
         <div className="bg-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">
-          🚀 INÍCIO
+          INÍCIO
         </div>
       </div>
 
       {/* Legenda */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 justify-center">
         {[
-          { emoji: '⭐', label: 'Checkpoint', cor: '#713f12' },
-          { emoji: '🎁', label: '+2 casas',  cor: '#14532d' },
-          { emoji: '💀', label: '-3 casas',  cor: '#7f1d1d' },
-          { emoji: '🎯', label: 'Double',     cor: '#1e3a8a' },
-          { emoji: '🔄', label: 'Troca',      cor: '#581c87' },
-        ].map(({ emoji, label, cor }) => (
+          { Icon: Star,           label: 'Checkpoint', cor: '#713f12' },
+          { Icon: Gift,           label: '+2 casas',   cor: '#14532d' },
+          { Icon: Skull,          label: '-3 casas',   cor: '#7f1d1d' },
+          { Icon: Target,         label: 'Double',     cor: '#1e3a8a' },
+          { Icon: ArrowLeftRight, label: 'Troca',      cor: '#581c87' },
+        ].map(({ Icon, label, cor }) => (
           <span key={label} className="flex items-center gap-1 text-xs font-semibold" style={{ color: cor }}>
-            {emoji} {label}
+            <Icon size={12} color={cor} strokeWidth={2} /> {label}
           </span>
         ))}
       </div>

@@ -88,7 +88,7 @@ export default function MapaPath({
 
       {/* META */}
       <circle cx={metaPos.x} cy={metaPos.y} r={22} fill="#1C1917" stroke="#FCD34D" strokeWidth={3} />
-      <text x={metaPos.x} y={metaPos.y} textAnchor="middle" dominantBaseline="middle" fontSize={18}>🏁</text>
+      <text x={metaPos.x} y={metaPos.y} textAnchor="middle" dominantBaseline="middle" fontSize={10} fill="#FCD34D" fontWeight="bold">FIM</text>
       <text x={metaPos.x} y={PAD_TOP - 4} textAnchor="middle" fontSize={9} fill="#FCD34D" fontWeight="bold" letterSpacing={2}>META</text>
 
       {/* Nodes */}
@@ -121,7 +121,7 @@ export default function MapaPath({
       })}
 
       {/* START */}
-      <text x={startPos.x} y={MAPA_H - 12} textAnchor="middle" fontSize={10} fill="#4338CA" fontWeight="bold">🚀 START</text>
+      <text x={startPos.x} y={MAPA_H - 12} textAnchor="middle" fontSize={10} fill="#4338CA" fontWeight="bold">START</text>
     </svg>
   );
 }

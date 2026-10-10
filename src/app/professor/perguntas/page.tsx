@@ -128,7 +128,7 @@ function CardPergunta({ p }: { p: Pergunta }) {
           {TIPO_LABEL[p.tipo] ?? p.tipo}
         </span>
         <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 99, background: '#21262D', color: '#fbbf24', border: '1px solid #30363D' }}>
-          {'⭐'.repeat(p.nivel)} nível {p.nivel}
+          {'★'.repeat(p.nivel)} nível {p.nivel}
         </span>
         <span style={{ fontSize: 10, color: '#484f58', marginLeft: 'auto', fontFamily: 'monospace' }}>{p.id}</span>
       </div>
