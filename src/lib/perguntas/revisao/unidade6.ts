@@ -59,7 +59,7 @@ export const perguntasUnidade6: Pergunta[] = [
     resposta: 'with',
   },
   {
-    id: 'u6_3_3', unidade: 'Unidade 6', categoria: 'grammar', nivel: 3, tipo: 'multipla_escolha',
+    id: 'u6_3_3', unidade: 'Unidade 6', categoria: 'grammar', nivel: 4, tipo: 'multipla_escolha',
     enunciado: '"Take your hands ___ the table!" significa:',
     opcoes: ['Tire as mãos da mesa!', 'Coloque as mãos na mesa!', 'Lave as mãos!', 'Bata na mesa!'],
     resposta: 'Tire as mãos da mesa!',

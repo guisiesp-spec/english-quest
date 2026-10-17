@@ -45,13 +45,13 @@ export const perguntasUnidade3: Pergunta[] = [
 
   // === FAMILY — Level 3 ===
   {
-    id: 'u3_fam_3_1', unidade: 'Unidade 3', categoria: 'vocabulary', nivel: 3, tipo: 'multipla_escolha',
+    id: 'u3_fam_3_1', unidade: 'Unidade 3', categoria: 'vocabulary', nivel: 4, tipo: 'multipla_escolha',
     enunciado: 'Your mother\'s father is your ___.',
     opcoes: ['grandfather', 'uncle', 'father', 'stepfather'],
     resposta: 'grandfather',
   },
   {
-    id: 'u3_fam_3_2', unidade: 'Unidade 3', categoria: 'vocabulary', nivel: 3, tipo: 'multipla_escolha',
+    id: 'u3_fam_3_2', unidade: 'Unidade 3', categoria: 'vocabulary', nivel: 4, tipo: 'multipla_escolha',
     enunciado: 'Your father\'s sister is your ___.',
     opcoes: ['aunt', 'cousin', 'niece', 'grandmother'],
     resposta: 'aunt',

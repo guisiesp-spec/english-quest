@@ -261,17 +261,6 @@ export const perguntasUnidade15: Pergunta[] = [
 
   // === Level 4 ===
   {
-    id: 'u15_4_1', unidade: 'Unidade 15', categoria: 'grammar', nivel: 4, tipo: 'multipla_escolha',
-    enunciado: '"Could have + particípio passado" é usado para:',
-    opcoes: [
-      'Falar sobre possibilidade ou habilidade não realizada no passado',
-      'Indicar habilidade atual',
-      'Fazer pedidos',
-      'Descrever o futuro',
-    ],
-    resposta: 'Falar sobre possibilidade ou habilidade não realizada no passado',
-  },
-  {
     id: 'u15_4_2', unidade: 'Unidade 15', categoria: 'grammar', nivel: 4, tipo: 'multipla_escolha',
     enunciado: '"He couldn\'t have done it — he was in another city." "Couldn\'t have" indica:',
     opcoes: ['impossibilidade sobre evento passado', 'habilidade que foi perdida', 'pedido negado', 'sugestão'],
@@ -351,27 +340,10 @@ export const perguntasUnidade15: Pergunta[] = [
 
   // === Level 5 ===
   {
-    id: 'u15_5_1', unidade: 'Unidade 15', categoria: 'grammar', nivel: 5, tipo: 'multipla_escolha',
-    enunciado: 'Qual frase expressa CRÍTICA usando "could have"?',
-    opcoes: ['Could you help?', 'You could have been more careful!', 'She could swim.', 'It could snow.'],
-    resposta: 'You could have been more careful!',
-  },
-  {
     id: 'u15_5_2', unidade: 'Unidade 15', categoria: 'grammar', nivel: 5, tipo: 'verdadeiro_falso',
     enunciado: 'Em discurso indireto, "can" do presente geralmente vira "could" quando o verbo principal está no passado.',
     resposta: 'verdadeiro',
     explicacao: '"I can do it." → She said she could do it.',
-  },
-  {
-    id: 'u15_5_3', unidade: 'Unidade 15', categoria: 'grammar', nivel: 5, tipo: 'multipla_escolha',
-    enunciado: '"She couldn\'t possibly have known about the surprise." O que essa frase expressa?',
-    opcoes: [
-      'Era absolutamente impossível que ela soubesse.',
-      'Ela descobriu a surpresa.',
-      'Ela deveria ter sabido.',
-      'Ela poderia saber agora.',
-    ],
-    resposta: 'Era absolutamente impossível que ela soubesse.',
   },
   {
     id: 'u15_5_4', unidade: 'Unidade 15', categoria: 'grammar', nivel: 5, tipo: 'ligar',

@@ -47,7 +47,7 @@ export const perguntasUnidade12: Pergunta[] = [
     resposta: '"This is Maria speaking."',
   },
   {
-    id: 'u12_3_2', unidade: 'Unidade 12', categoria: 'grammar', nivel: 3, tipo: 'multipla_escolha',
+    id: 'u12_3_2', unidade: 'Unidade 12', categoria: 'grammar', nivel: 4, tipo: 'multipla_escolha',
     enunciado: 'Qual frase usa this/that CORRETAMENTE?',
     opcoes: [
       '"This house here is old, but that house over there is new."',

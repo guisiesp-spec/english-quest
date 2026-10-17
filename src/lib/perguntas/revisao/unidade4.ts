@@ -105,7 +105,7 @@ export const perguntasUnidade4: Pergunta[] = [
     ],
   },
   {
-    id: 'u4_posadj_3_1', unidade: 'Unidade 4', categoria: 'grammar', nivel: 3, tipo: 'verdadeiro_falso',
+    id: 'u4_posadj_3_1', unidade: 'Unidade 4', categoria: 'grammar', nivel: 4, tipo: 'verdadeiro_falso',
     enunciado: '"The dog hurt it\'s leg." está correto.',
     resposta: 'falso',
     explicacao: '"its" (possessivo) não tem apóstrofo. "it\'s" = "it is".',

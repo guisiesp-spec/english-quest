@@ -198,12 +198,6 @@ export const perguntasExtras2: Pergunta[] = [
 
   // Level 4 — Body parts & Sports
   {
-    id: 'e2_voc_4_1', unidade: 'Extra 2', categoria: 'vocabulary', nivel: 4, tipo: 'multipla_escolha',
-    enunciado: 'Como se diz "joelho" em inglês?',
-    opcoes: ['knee', 'elbow', 'ankle', 'wrist'],
-    resposta: 'knee',
-  },
-  {
     id: 'e2_voc_4_2', unidade: 'Extra 2', categoria: 'vocabulary', nivel: 4, tipo: 'multipla_escolha',
     enunciado: 'Qual desporto usa as palavras "serve", "volley" e "match"?',
     opcoes: ['tennis', 'football', 'basketball', 'swimming'],
@@ -316,12 +310,6 @@ export const perguntasExtras2: Pergunta[] = [
   },
 
   // Level 4 — Prepositions of place & Directions
-  {
-    id: 'e2_tp_4_1', unidade: 'Extra 2', categoria: 'time_place', nivel: 4, tipo: 'multipla_escolha',
-    enunciado: 'Complete: "The supermarket is ___ the school." (em frente à)',
-    opcoes: ['in front of', 'behind', 'next to', 'between'],
-    resposta: 'in front of',
-  },
   {
     id: 'e2_tp_4_2', unidade: 'Extra 2', categoria: 'time_place', nivel: 4, tipo: 'multipla_escolha',
     enunciado: 'Para pedir para alguém virar à esquerda, dizemos:',
