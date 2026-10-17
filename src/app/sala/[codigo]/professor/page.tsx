@@ -1,5 +1,6 @@
 'use client';
 import { use, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BookOpen, MessageSquare, Clock, Zap, Shuffle, HelpCircle,
   GraduationCap, QrCode, Gamepad2, Eye, Wifi, Pause, Play,
@@ -128,9 +129,9 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
         </div>
       )}
 
-      {/* Confirmação encerrar */}
-      {confirmEncerrar && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+      {/* Confirmação encerrar — portal garante z-index acima de qualquer elemento */}
+      {confirmEncerrar && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
           <div className="bg-[#161B22] border border-red-500/30 rounded-3xl p-6 w-full max-w-sm text-center flex flex-col gap-4">
             <Flag size={40} color="#ef4444" strokeWidth={1.5} />
             <h2 className="text-white font-black text-xl">Encerrar o jogo?</h2>
@@ -152,7 +153,8 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <main className="min-h-screen bg-[#0D1117] pb-10">
