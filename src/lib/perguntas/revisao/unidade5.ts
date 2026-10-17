@@ -162,6 +162,5 @@ export const perguntasUnidade5: Pergunta[] = [
     enunciado: 'Qual formação de adjetivo com "-y" está INCORRETA?',
     opcoes: ['foogy', 'cloudy', 'rainy', 'snowy'],
     resposta: 'foogy',
-    explicacao: 'O correto é "foggy" (fog → foggy), dobrando o G antes de -y.',
   },
 ];
