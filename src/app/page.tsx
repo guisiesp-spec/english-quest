@@ -80,13 +80,6 @@ export default function Home() {
 
       </div>
 
-      {/* Link discreto para professor */}
-      <a
-        href="/professor"
-        className="absolute bottom-6 text-[#30363D] hover:text-[#7D8590] text-xs transition-colors"
-      >
-        Professor
-      </a>
     </main>
   );
 }

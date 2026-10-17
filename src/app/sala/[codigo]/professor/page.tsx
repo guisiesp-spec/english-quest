@@ -130,7 +130,7 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
 
       {/* Confirmação encerrar */}
       {confirmEncerrar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
           <div className="bg-[#161B22] border border-red-500/30 rounded-3xl p-6 w-full max-w-sm text-center flex flex-col gap-4">
             <Flag size={40} color="#ef4444" strokeWidth={1.5} />
             <h2 className="text-white font-black text-xl">Encerrar o jogo?</h2>
@@ -248,28 +248,25 @@ export default function ProfessorPage({ params }: { params: Promise<{ codigo: st
                     ▶ Iniciar
                   </button>
                 )}
-                {sala.status === 'jogando' && !sala.pausado && (
+                {sala.status === 'jogando' && (
                   <>
-                    <button onClick={pausar}
-                      className="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
-                      <Pause size={14} /> Pausar
-                    </button>
-                    <button onClick={avancarTurno}
-                      className="bg-violet-600 hover:bg-violet-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
-                      <SkipForward size={14} /> Skip
-                    </button>
-                    <button onClick={() => setConfirmEncerrar(true)}
-                      className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
-                      <Flag size={14} /> Encerrar
-                    </button>
-                  </>
-                )}
-                {sala.status === 'jogando' && sala.pausado && (
-                  <>
-                    <button onClick={pausar}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
-                      <Play size={14} /> Retomar
-                    </button>
+                    {sala.pausado ? (
+                      <button onClick={pausar}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
+                        <Play size={14} /> Retomar
+                      </button>
+                    ) : (
+                      <>
+                        <button onClick={pausar}
+                          className="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
+                          <Pause size={14} /> Pausar
+                        </button>
+                        <button onClick={avancarTurno}
+                          className="bg-violet-600 hover:bg-violet-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
+                          <SkipForward size={14} /> Skip
+                        </button>
+                      </>
+                    )}
                     <button onClick={() => setConfirmEncerrar(true)}
                       className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 font-bold px-4 py-2.5 rounded-xl text-sm transition-all active:scale-[.97] flex items-center gap-1.5">
                       <Flag size={14} /> Encerrar
