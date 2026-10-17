@@ -199,4 +199,8 @@ const GRUPOS_SLOTS = [
   { nome: 'Grupo Amarelo',  cor: '#eab308', emoji: '🟡' },
   { nome: 'Grupo Roxo',     cor: '#a855f7', emoji: '🟣' },
   { nome: 'Grupo Laranja',  cor: '#f97316', emoji: '🟠' },
+  { nome: 'Grupo Rosa',     cor: '#ec4899', emoji: '🩷' },
+  { nome: 'Grupo Ciano',    cor: '#06b6d4', emoji: '🩵' },
+  { nome: 'Grupo Marrom',   cor: '#92400e', emoji: '🟤' },
+  { nome: 'Grupo Cinza',    cor: '#6b7280', emoji: '⚫' },
 ];
